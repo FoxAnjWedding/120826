@@ -7,7 +7,7 @@
 <style>
 :root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--sage:#7d8a70;--gold:#b79b63;--line:#ded8ca;--error:#9b4d42}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
-.wrap{max-width:850px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;padding:32px 28px;border-radius:2px}
+.wrap{max-width:950px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;padding:32px 28px;border-radius:2px}
 .hero{text-align:center;padding-bottom:28px;margin-bottom:28px;border-bottom:1px solid var(--line)}
 .kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:32px;font-weight:400;margin:12px 0 6px}h2{font-size:22px;font-weight:400;margin:0 0 10px}
 .date{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#777}
@@ -21,22 +21,21 @@ button.secondary{background:#eee9de;color:var(--ink);width:auto}button:disabled{
 .error{color:var(--error);font-size:13px;margin-top:8px}
 
 /* Dashboard UI */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:30px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:30px}
 .stat-card{background:#f4f0e6;padding:18px;text-align:center;border:1px solid var(--line)}
-.stat-card h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#777}
-.stat-card .num{font-size:26px;font-weight:normal;color:var(--ink)}
+.stat-card h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#777}
+.stat-card .num{font-size:24px;font-weight:normal;color:var(--ink)}
 
 .table-container{overflow-x:auto;margin-top:15px}
-table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}
+table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
 th,td{padding:12px 10px;border-bottom:1px solid var(--line)}
-th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:12px;text-transform:uppercase}
+th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-transform:uppercase}
 .tag{display:inline-block;padding:3px 8px;font-size:11px;border-radius:2px}
 .tag.attending{background:#e4ebe1;color:#43533a}
 .tag.declined{background:#f7e8e6;color:#8a433a}
 .tag.pending{background:#eee9de;color:#777}
 .muted{color:#777;font-size:13px}
-.top-actions{display:flex;justify-content:between;align-items:center;margin-bottom:20px}
-@media(max-width:600px){.stats-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.stats-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -58,23 +57,30 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:12px;text-
 
 <!-- Dashboard Panel (Hidden by default) -->
 <div id="dashboardSection" style="display:none;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <h2>RSVP Overview</h2>
-    <button class="secondary" onclick="loadAdminData()" id="refreshBtn">Refresh Data</button>
+    <div>
+      <button class="secondary" onclick="downloadCSV()" style="margin-right:8px;">Download CSV</button>
+      <button class="secondary" onclick="loadAdminData()" id="refreshBtn">Refresh Data</button>
+    </div>
   </div>
 
   <div class="stats-grid">
     <div class="stat-card">
-      <h3>Total Invited Seats</h3>
-      <div class="num" id="statTotalSeats">-</div>
+      <h3>Total Invited</h3>
+      <div class="num" id="statTotal">-</div>
     </div>
     <div class="stat-card">
-      <h3>Confirmed Seats</h3>
-      <div class="num" id="statConfirmedSeats">-</div>
+      <h3>Confirmed</h3>
+      <div class="num" id="statConfirmed">-</div>
     </div>
     <div class="stat-card">
-      <h3>Declined Seats</h3>
-      <div class="num" id="statDeclinedSeats">-</div>
+      <h3>Not Attending</h3>
+      <div class="num" id="statDeclined">-</div>
+    </div>
+    <div class="stat-card">
+      <h3>Pending</h3>
+      <div class="num" id="statPending">-</div>
     </div>
   </div>
 
@@ -83,15 +89,17 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:12px;text-
     <table>
       <thead>
         <tr>
-          <th>Primary Guest</th>
-          <th>Status Breakdown</th>
-          <th>Seats</th>
+          <th>Guest</th>
+          <th>Group</th>
+          <th>Status</th>
           <th>Mobile</th>
-          <th>Dietary / Notes</th>
+          <th>Dietary</th>
+          <th>Message</th>
+          <th>Updated</th>
         </tr>
       </thead>
-      <tbody id="adminTableBody">
-        <tr><td colspan="5" style="text-align:center;" class="muted">Loading records...</td></tr>
+      <tbody id="rows">
+        <tr><td colspan="7" style="text-align:center;" class="muted">Loading records...</td></tr>
       </tbody>
     </table>
   </div>
@@ -104,11 +112,9 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:12px;text-
 </div></div>
 
 <script>
-// Point this to your published Google Apps Script Web App URL
 const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAttB8lXqb-H3y_ONahnaJAoceZLaaIvcZOnFOTGS8o1VwVf/exec";
-
-// Change this to whatever secure passcode you prefer for your admin page
-const ADMIN_PASSCODE = "060897rR.";
+const ADMIN_PASSCODE = "foxanj2026"; // Change to your preferred passcode
+let data = [];
 
 document.getElementById("loginBtn").onclick = () => {
   const val = document.getElementById("passcode").value;
@@ -122,7 +128,6 @@ document.getElementById("loginBtn").onclick = () => {
   }
 };
 
-// Allow pressing 'Enter' to submit passcode
 document.getElementById("passcode").onkeypress = (e) => {
   if(e.key === "Enter") document.getElementById("loginBtn").click();
 };
@@ -135,15 +140,16 @@ async function loadAdminData() {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body: JSON.stringify({ action: "getAdminData", passcode: ADMIN_PASSCODE })
+      body: JSON.stringify({ action: "adminData", adminKey: ADMIN_PASSCODE })
     });
-    const data = await res.json();
+    const r = await res.json();
     
-    if(!data.ok) {
-      alert(data.message || "Failed to load admin data.");
+    if(!r.ok) {
+      alert(r.message || "Failed to load admin data.");
       return;
     }
     
+    data = r.rows || [];
     renderDashboard(data);
   } catch(e) {
     alert("Unable to connect to Google Sheets backend.");
@@ -152,48 +158,52 @@ async function loadAdminData() {
   }
 }
 
-function renderDashboard(data) {
-  let totalSeats = 0;
-  let confirmedSeats = 0;
-  let declinedSeats = 0;
+function renderDashboard(rows) {
+  let total = rows.length;
+  let confirmed = rows.filter(x => x.status === "Attending").length;
+  let declined = rows.filter(x => x.status === "Not Attending").length;
+  let pending = total - confirmed - declined;
 
-  const tbody = document.getElementById("adminTableBody");
-  
-  if(!data.households || data.households.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;" class="muted">No invitation records found.</td></tr>`;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statConfirmed").textContent = confirmed;
+  document.getElementById("statDeclined").textContent = declined;
+  document.getElementById("statPending").textContent = pending;
+
+  const tbody = document.getElementById("rows");
+  if(rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;" class="muted">No invitation records found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.households.map(h => {
-    totalSeats += Number(h.totalSeats || 0);
-    confirmedSeats += Number(h.confirmedSeats || 0);
-    declinedSeats += Number(h.declinedSeats || 0);
-
-    let statusBadge = `<span class="tag pending">Pending</span>`;
-    if(h.responseStatus === "Confirmed") statusBadge = `<span class="tag attending">Confirmed (${h.confirmedSeats})</span>`;
-    else if(h.responseStatus === "Declined") statusBadge = `<span class="tag declined">Declined</span>`;
+  tbody.innerHTML = rows.map(x => {
+    let statusClass = "pending";
+    if(x.status === "Attending") statusClass = "attending";
+    else if(x.status === "Not Attending") statusClass = "declined";
 
     return `
       <tr>
-        <td><strong>${esc(h.primaryName)}</strong><br><span class="muted" style="font-size:11px">${h.guestCount} guest(s) on invite</span></td>
-        <td>${statusBadge}</td>
-        <td>${h.confirmedSeats} / ${h.totalSeats}</td>
-        <td>${esc(h.mobile || "—")}</td>
-        <td>
-          ${h.dietary ? `<div><em>Diet:</em> ${esc(h.dietary)}</div>` : ""}
-          ${h.message ? `<div style="margin-top:4px"><em class="muted">"${esc(h.message)}"</em></div>` : ""}
-          ${!h.dietary && !h.message ? `<span class="muted">—</span>` : ""}
-        </td>
+        <td><strong>${esc(x.name)}</strong></td>
+        <td>${esc(x.group)}</td>
+        <td><span class="tag ${statusClass}">${esc(x.status || "Pending")}</span></td>
+        <td>${esc(x.mobile || "—")}</td>
+        <td>${esc(x.dietary || "—")}</td>
+        <td>${x.message ? `<em>"${esc(x.message)}"</em>` : '<span class="muted">—</span>'}</td>
+        <td>${esc(x.updated || "—")}</td>
       </tr>
     `;
   }).join("");
-
-  document.getElementById("statTotalSeats").textContent = totalSeats;
-  document.getElementById("statConfirmedSeats").textContent = confirmedSeats;
-  document.getElementById("statDeclinedSeats").textContent = declinedSeats;
 }
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+
+function downloadCSV(){
+  let cols = ["name","group","status","mobile","dietary","message","updated"];
+  let csv = [cols.join(","), ...data.map(x => cols.map(c => `"${String(x[c]??"").replaceAll('"','""')}"`).join(","))].join("\n");
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download = "wedding-rsvp-responses.csv";
+  a.click();
+}
 </script>
 </body>
 </html>
