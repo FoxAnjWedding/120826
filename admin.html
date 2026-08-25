@@ -1,209 +1,55 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reggie & Angelika — Admin Portal</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wedding RSVP Admin</title>
 <style>
-:root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--sage:#7d8a70;--gold:#b79b63;--line:#ded8ca;--error:#9b4d42}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
-.wrap{max-width:950px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;padding:32px 28px;border-radius:2px}
-.hero{text-align:center;padding-bottom:28px;margin-bottom:28px;border-bottom:1px solid var(--line)}
-.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:32px;font-weight:400;margin:12px 0 6px}h2{font-size:22px;font-weight:400;margin:0 0 10px}
-.date{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#777}
-
-/* Login Panel */
-.login-box{max-width:380px;margin:40px auto;text-align:center}
-label{display:block;font-size:13px;margin:0 0 8px;text-align:left}
-input{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px;margin-bottom:14px}
-button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px;width:100%}
-button.secondary{background:#eee9de;color:var(--ink);width:auto}button:disabled{opacity:.55;cursor:not-allowed}
-.error{color:var(--error);font-size:13px;margin-top:8px}
-
-/* Dashboard UI */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:30px}
-.stat-card{background:#f4f0e6;padding:18px;text-align:center;border:1px solid var(--line)}
-.stat-card h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#777}
-.stat-card .num{font-size:24px;font-weight:normal;color:var(--ink)}
-
-.table-container{overflow-x:auto;margin-top:15px}
-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
-th,td{padding:12px 10px;border-bottom:1px solid var(--line)}
-th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-transform:uppercase}
-.tag{display:inline-block;padding:3px 8px;font-size:11px;border-radius:2px}
-.tag.attending{background:#e4ebe1;color:#43533a}
-.tag.declined{background:#f7e8e6;color:#8a433a}
-.tag.pending{background:#eee9de;color:#777}
-.muted{color:#777;font-size:13px}
-@media(max-width:700px){.stats-grid{grid-template-columns:1fr 1fr}}
-</style>
-</head>
-<body>
-<div class="wrap"><div class="card">
-<header class="hero">
-  <div class="kicker">Wedding Management</div>
-  <h1>Admin Dashboard</h1>
-  <div class="date">Reggie & Angelika · December 9, 2026</div>
-</header>
-
-<!-- Login Screen -->
-<div id="loginSection" class="login-box">
-  <h2>Enter Passcode</h2>
-  <p class="muted" style="margin-bottom:20px">Please enter the admin passcode to view guest RSVP records.</p>
-  <input type="password" id="passcode" placeholder="Enter admin passcode" autocomplete="current-password">
-  <button id="loginBtn">Access Dashboard</button>
-  <div id="loginError" class="error"></div>
+body{font-family:Arial,sans-serif;background:#f6f4ef;color:#30322c;margin:0}
+.wrap{max-width:1100px;margin:auto;padding:28px 16px}
+.card{background:white;border:1px solid #ddd8cc;padding:22px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:#f3f0e8;padding:18px}
+.num{font-size:28px;font-weight:700}
+button{padding:11px 16px;border:0;background:#78856c;color:#fff;cursor:pointer;transition:background 0.2s ease, transform 0.1s ease}
+button:hover{background:#65715a}
+button:active{transform:scale(0.98)}
+input{padding:11px;border:1px solid #ccc;width:260px;transition:border-color 0.2s ease}
+input:focus{outline:none;border-color:#78856c}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #eee;font-size:13px}
+#app{opacity:0;max-height:0;overflow:hidden;transition:opacity 0.5s ease, max-height 0.5s ease;pointer-events:none}
+#app.visible{opacity:1;max-height:2000px;pointer-events:auto}
+@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}table{display:block;overflow:auto}}
+</style></head><body><div class="wrap">
+<div class="card"><h1>Reggie & Angelika — RSVP Dashboard</h1><p>Private admin page. Enter your admin key to load responses.</p><input id="key" type="password" placeholder="Admin key"> <button onclick="load()">Load Dashboard</button><span id="err"></span></div>
+<div id="app">
+<div class="stats">
+<div class="stat"><div>Total invited</div><div class="num" id="total">0</div></div>
+<div class="stat"><div>Confirmed seats</div><div class="num" id="confirmed">0</div></div>
+<div class="stat"><div>Not attending</div><div class="num" id="declined">0</div></div>
+<div class="stat"><div>Pending guests</div><div class="num" id="pending">0</div></div>
 </div>
-
-<!-- Dashboard Panel (Hidden by default) -->
-<div id="dashboardSection" style="display:none;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-    <h2>RSVP Overview</h2>
-    <div>
-      <button class="secondary" onclick="downloadCSV()" style="margin-right:8px;">Download CSV</button>
-      <button class="secondary" onclick="loadAdminData()" id="refreshBtn">Refresh Data</button>
-    </div>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card">
-      <h3>Total Invited</h3>
-      <div class="num" id="statTotal">-</div>
-    </div>
-    <div class="stat-card">
-      <h3>Confirmed</h3>
-      <div class="num" id="statConfirmed">-</div>
-    </div>
-    <div class="stat-card">
-      <h3>Not Attending</h3>
-      <div class="num" id="statDeclined">-</div>
-    </div>
-    <div class="stat-card">
-      <h3>Pending</h3>
-      <div class="num" id="statPending">-</div>
-    </div>
-  </div>
-
-  <h3>Guest Responses</h3>
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Guest</th>
-          <th>Group</th>
-          <th>Status</th>
-          <th>Mobile</th>
-          <th>Dietary</th>
-          <th>Message</th>
-          <th>Updated</th>
-        </tr>
-      </thead>
-      <tbody id="rows">
-        <tr><td colspan="7" style="text-align:center;" class="muted">Loading records...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div style="margin-top:30px; text-align:right;">
-    <button class="secondary" onclick="location.reload()">Lock Portal</button>
-  </div>
-</div>
-
+<div class="card"><button onclick="downloadCSV()">Download Guest List / Responses (CSV)</button></div>
+<div class="card"><table><thead><tr><th>Guest</th><th>Group</th><th>Status</th><th>Mobile</th><th>Dietary</th><th>Message</th><th>Updated</th></tr></thead><tbody id="rows"></tbody></table></div>
 </div></div>
-
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAttB8lXqb-H3y_ONahnaJAoceZLaaIvcZOnFOTGS8o1VwVf/exec";
-const ADMIN_PASSCODE = "060897rR."; // Change to your preferred passcode
-let data = [];
-
-document.getElementById("loginBtn").onclick = () => {
-  const val = document.getElementById("passcode").value;
-  const err = document.getElementById("loginError");
-  if(val === ADMIN_PASSCODE) {
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("dashboardSection").style.display = "block";
-    loadAdminData();
-  } else {
-    err.textContent = "Incorrect passcode. Please try again.";
-  }
-};
-
-document.getElementById("passcode").onkeypress = (e) => {
-  if(e.key === "Enter") document.getElementById("loginBtn").click();
-};
-
-async function loadAdminData() {
-  const btn = document.getElementById("refreshBtn");
-  if(btn) btn.textContent = "Loading...";
-  
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body: JSON.stringify({ action: "adminData", adminKey: ADMIN_PASSCODE })
-    });
-    const r = await res.json();
-    
-    if(!r.ok) {
-      alert(r.message || "Failed to load admin data.");
-      return;
-    }
-    
-    data = r.rows || [];
-    renderDashboard(data);
-  } catch(e) {
-    alert("Unable to connect to Google Sheets backend.");
-  } finally {
-    if(btn) btn.textContent = "Refresh Data";
-  }
+const API_URL="https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAttB8lXqb-H3y_ONahnaJAoceZLaaIvcZOnFOTGS8o1VwVf/exec";let key="",data=[];
+async function api(action){let r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,adminKey:key})});return r.json()}
+async function load(){
+  key=document.getElementById("key").value;
+  document.getElementById("err").textContent=" Loading…";
+  try{
+    let r=await api("adminData");
+    if(!r.ok){document.getElementById("err").textContent=" "+(r.message||"Invalid key");return}
+    data=r.rows;
+    let appEl = document.getElementById("app");
+    appEl.classList.add("visible");
+    document.getElementById("err").textContent="";
+    let total=data.length,confirmed=data.filter(x=>x.status==="Attending").length,declined=data.filter(x=>x.status==="Not Attending").length;
+    document.getElementById("total").textContent=total;
+    document.getElementById("confirmed").textContent=confirmed;
+    document.getElementById("declined").textContent=declined;
+    document.getElementById("pending").textContent=total-confirmed-declined;
+    document.getElementById("rows").innerHTML=data.map(x=>`<tr><td>${e(x.name)}</td><td>${e(x.group)}</td><td>${e(x.status)}</td><td>${e(x.mobile)}</td><td>${e(x.dietary)}</td><td>${e(x.message)}</td><td>${e(x.updated)}</td></tr>`).join("")
+  }catch(e){document.getElementById("err").textContent=" Connection error"}
 }
-
-function renderDashboard(rows) {
-  let total = rows.length;
-  let confirmed = rows.filter(x => x.status === "Attending").length;
-  let declined = rows.filter(x => x.status === "Not Attending").length;
-  let pending = total - confirmed - declined;
-
-  document.getElementById("statTotal").textContent = total;
-  document.getElementById("statConfirmed").textContent = confirmed;
-  document.getElementById("statDeclined").textContent = declined;
-  document.getElementById("statPending").textContent = pending;
-
-  const tbody = document.getElementById("rows");
-  if(rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;" class="muted">No invitation records found.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map(x => {
-    let statusClass = "pending";
-    if(x.status === "Attending") statusClass = "attending";
-    else if(x.status === "Not Attending") statusClass = "declined";
-
-    return `
-      <tr>
-        <td><strong>${esc(x.name)}</strong></td>
-        <td>${esc(x.group)}</td>
-        <td><span class="tag ${statusClass}">${esc(x.status || "Pending")}</span></td>
-        <td>${esc(x.mobile || "—")}</td>
-        <td>${esc(x.dietary || "—")}</td>
-        <td>${x.message ? `<em>"${esc(x.message)}"</em>` : '<span class="muted">—</span>'}</td>
-        <td>${esc(x.updated || "—")}</td>
-      </tr>
-    `;
-  }).join("");
-}
-
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
-
-function downloadCSV(){
-  let cols = ["name","group","status","mobile","dietary","message","updated"];
-  let csv = [cols.join(","), ...data.map(x => cols.map(c => `"${String(x[c]??"").replaceAll('"','""')}"`).join(","))].join("\n");
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download = "wedding-rsvp-responses.csv";
-  a.click();
-}
-</script>
-</body>
-</html>
+function e(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function downloadCSV(){let cols=["name","group","status","mobile","dietary","message","updated"];let csv=[cols.join(","),...data.map(x=>cols.map(c=>`"${String(x[c]??"").replaceAll('"','""')}"`).join(","))].join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="wedding-rsvp-responses.csv";a.click()}
+</script></body></html>
