@@ -7,10 +7,19 @@
 <style>
 :root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--sage:#7d8a70;--gold:#b79b63;--line:#ded8ca}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
-.wrap{max-width:680px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c}
+.wrap{max-width:680px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;overflow:hidden;position:relative}
 .hero{text-align:center;padding:52px 24px 34px;background:linear-gradient(#fffdf8ee,#fffdf8ee),url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80") center/cover}
-.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:42px;font-weight:400;margin:15px 0 8px}h2{font-size:25px;font-weight:400;margin:0 0 10px}.date{font-size:15px;letter-spacing:2px;text-transform:uppercase}.section{padding:30px 28px;border-top:1px solid var(--line)}label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink)}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.success{text-align:center;padding:48px 28px}.success .mark{font-size:42px;color:var(--sage)}.hidden{display:none}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
-@media(max-width:500px){h1{font-size:34px}.section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
+.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:42px;font-weight:400;margin:15px 0 8px}h2{font-size:25px;font-weight:400;margin:0 0 10px}.date{font-size:15px;letter-spacing:2px;text-transform:uppercase}
+
+/* Smooth Transition Styles */
+.section-container{position:relative;min-height:220px}
+.page-section{padding:30px 28px;border-top:1px solid var(--line);position:absolute;top:0;left:0;width:100%;opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;pointer-events:none}
+.page-section.active{position:relative;opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+.success{text-align:center;padding:48px 28px}
+.success .mark{font-size:42px;color:var(--sage)}
+
+label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink);transition:background 0.2s}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
+@media(max-width:500px){h1{font-size:34px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -18,46 +27,48 @@
 <header class="hero">
   <div class="kicker">The Wedding of</div>
   <h1>Reggie & Angelika</h1>
-  <div class="date">December 9, 2026 · Santa Maria, Bulacan</div>
+  <div class="date">December 9, 2026 · Santa Maria, Bulacan[cite: 2]</div>
 </header>
 
-<section id="searchSection" class="section">
-  <h2>Kindly RSVP</h2>
-  <p class="muted">Please enter your name exactly as it appears on your invitation.</p>
-  <div class="row">
-    <input id="nameInput" placeholder="First and last name" autocomplete="name">
-    <button id="searchBtn">Find My Invitation</button>
-  </div>
-  <div id="searchError" class="error"></div>
-</section>
+<div class="section-container">
+  <section id="searchSection" class="page-section active">
+    <h2>Kindly RSVP</h2>
+    <p class="muted">Please enter your name exactly as it appears on your invitation.</p>
+    <div class="row">
+      <input id="nameInput" placeholder="First and last name" autocomplete="name">
+      <button id="searchBtn">Find My Invitation</button>
+    </div>
+    <div id="searchError" class="error"></div>
+  </section>
 
-<section id="rsvpSection" class="section hidden">
-  <div id="welcome"></div>
-  <div id="guestList"></div>
-  <div class="summary"><strong id="seatSummary">0 seats confirmed</strong><br><span class="muted">Only the guests listed on your invitation may be confirmed.</span></div>
+  <section id="rsvpSection" class="page-section">
+    <div id="welcome"></div>
+    <div id="guestList"></div>
+    <div class="summary"><strong id="seatSummary">0 seats confirmed</strong><br><span class="muted">Only the guests listed on your invitation may be confirmed.</span></div>
 
-  <div style="margin-top:22px">
-    <label>Philippine Mobile Number <span class="small">(optional)</span></label>
-    <input id="mobile" inputmode="numeric" placeholder="09XXXXXXXXX">
-  </div>
-  <div style="margin-top:18px">
-    <label>Dietary Restrictions <span class="small">(optional)</span></label>
-    <input id="dietary" placeholder="None / please specify">
-  </div>
-  <div style="margin-top:18px">
-    <label>Message for the couple <span class="small">(optional)</span></label>
-    <textarea id="message" rows="3" placeholder="Leave us a little message"></textarea>
-  </div>
-  <div style="margin-top:22px"><button id="submitBtn" disabled>Submit RSVP</button></div>
-  <div id="submitError" class="error"></div>
-</section>
+    <div style="margin-top:22px">
+      <label>Philippine Mobile Number <span class="small">(optional)</span></label>
+      <input id="mobile" inputmode="numeric" placeholder="09XXXXXXXXX">
+    </div>
+    <div style="margin-top:18px">
+      <label>Dietary Restrictions <span class="small">(optional)</span></label>
+      <input id="dietary" placeholder="None / please specify">
+    </div>
+    <div style="margin-top:18px">
+      <label>Message for the couple <span class="small">(optional)</span></label>
+      <textarea id="message" rows="3" placeholder="Leave us a little message"></textarea>
+    </div>
+    <div style="margin-top:22px"><button id="submitBtn" disabled>Submit RSVP</button></div>
+    <div id="submitError" class="error"></div>
+  </section>
 
-<section id="successSection" class="success hidden">
-  <div class="mark">✓</div><h2>You're all set!</h2>
-  <p id="successText"></p>
-  <p class="muted">You may return to this page before the RSVP deadline if you need to update your response.</p>
-  <button class="secondary" onclick="location.reload()">Back</button>
-</section>
+  <section id="successSection" class="page-section success">
+    <div class="mark">✓</div><h2>You're all set!</h2>
+    <p id="successText"></p>
+    <p class="muted">You may return to this page before the RSVP deadline if you need to update your response.</p>
+    <button class="secondary" onclick="location.reload()">Back</button>
+  </section>
+</div>
 
 <div class="footer">With love, Reggie & Angelika</div>
 </div></div>
@@ -76,6 +87,17 @@ function api(action, data={}) {
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
 
+// Helper function to handle view switching smoothly
+function switchSection(hideId, showId) {
+  const hideElem = document.getElementById(hideId);
+  const showElem = document.getElementById(showId);
+  
+  hideElem.classList.remove("active");
+  setTimeout(() => {
+    showElem.classList.add("active");
+  }, 200); // Slight stagger for smooth transition
+}
+
 document.getElementById("searchBtn").onclick = async () => {
   const name=document.getElementById("nameInput").value.trim();
   const err=document.getElementById("searchError"); err.textContent="";
@@ -87,14 +109,16 @@ document.getElementById("searchBtn").onclick = async () => {
     household=res.household; answers={};
     household.guests.forEach(g=>answers[g.id]=g.status||"");
     renderGuests();
-    document.getElementById("searchSection").classList.add("hidden");
-    document.getElementById("rsvpSection").classList.remove("hidden");
+    
     document.getElementById("mobile").value=household.mobile||"";
     document.getElementById("dietary").value=household.dietary||"";
     document.getElementById("message").value=household.message||"";
+    
+    switchSection("searchSection", "rsvpSection");
   }catch(e){err.textContent="Unable to connect. Please try again."}
   finally{btn.disabled=false;btn.textContent="Find My Invitation"}
 };
+
 function renderGuests(){
   document.getElementById("welcome").innerHTML=`<h2>${esc(household.primaryName)}, we’re excited to celebrate with you.</h2><p class="muted">${household.guests.length} reserved guest${household.guests.length>1?"s":""} · ${household.seats} reserved seat${household.seats>1?"s":""}</p>`;
   document.getElementById("guestList").innerHTML=household.guests.map(g=>`
@@ -112,6 +136,7 @@ function updateSummary(){
   document.getElementById("seatSummary").textContent=`${yes} seat${yes!==1?"s":""} confirmed`;
   document.getElementById("submitBtn").disabled=!all;
 }
+
 document.getElementById("submitBtn").onclick=async()=>{
   const err=document.getElementById("submitError");err.textContent="";
   const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
@@ -125,8 +150,8 @@ document.getElementById("submitBtn").onclick=async()=>{
     if(!res.ok){err.textContent=res.message||"Unable to save your RSVP.";return}
     const yes=Object.values(answers).filter(x=>x==="Attending").length;
     document.getElementById("successText").textContent=`Thank you for confirming. We have ${yes} guest${yes!==1?"s":""} attending from your invitation.`;
-    document.getElementById("rsvpSection").classList.add("hidden");
-    document.getElementById("successSection").classList.remove("hidden");
+    
+    switchSection("rsvpSection", "successSection");
   }catch(e){err.textContent="Unable to save your RSVP. Please try again."}
   finally{btn.disabled=false;btn.textContent="Submit RSVP"}
 };
