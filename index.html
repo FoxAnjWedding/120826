@@ -9,7 +9,10 @@
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
 .wrap{max-width:680px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;overflow:hidden;position:relative}
 .hero{text-align:center;padding:52px 24px 34px;background:linear-gradient(#fffdf8ee,#fffdf8ee),url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80") center/cover}
-.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:42px;font-weight:400;margin:15px 0 8px}h2{font-size:25px;font-weight:400;margin:0 0 10px}.date{font-size:15px;letter-spacing:2px;text-transform:uppercase}
+.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:42px;font-weight:400;margin:15px 0 8px}h2{font-size:25px;font-weight:400;margin:0 0 10px}
+
+/* Updated .date with white-space: nowrap and adjusted font-size for mobile screens */
+.date{font-size:14px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
 
 /* Smooth Transition Styles */
 .section-container{position:relative;min-height:220px}
@@ -87,7 +90,6 @@ function api(action, data={}) {
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
 
-// Helper function to handle view switching smoothly
 function switchSection(hideId, showId) {
   const hideElem = document.getElementById(hideId);
   const showElem = document.getElementById(showId);
@@ -95,7 +97,7 @@ function switchSection(hideId, showId) {
   hideElem.classList.remove("active");
   setTimeout(() => {
     showElem.classList.add("active");
-  }, 200); // Slight stagger for smooth transition
+  }, 200);
 }
 
 document.getElementById("searchBtn").onclick = async () => {
@@ -110,7 +112,6 @@ document.getElementById("searchBtn").onclick = async () => {
     household.guests.forEach(g=>answers[g.id]=g.status||"");
     renderGuests();
     
-    // Strip leading quote if returning from sheet so it displays cleanly in the input field
     let cleanMobile = household.mobile || "";
     if (cleanMobile.startsWith("'")) cleanMobile = cleanMobile.substring(1);
     document.getElementById("mobile").value=cleanMobile;
@@ -146,7 +147,6 @@ document.getElementById("submitBtn").onclick=async()=>{
   const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
   
   let rawMobile = document.getElementById("mobile").value.trim();
-  // Prepend single quote if it starts with 0 to force Google Sheets to treat it as text
   if (rawMobile.startsWith("0")) {
     rawMobile = "'" + rawMobile;
   }
