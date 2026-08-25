@@ -132,35 +132,22 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAttB8lXqb-H3y_ONahnaJAoceZLaaIvcZOnFOTGS8o1VwVf/exec";
+const ADMIN_PASSCODE = "foxanj2026";
 let data = [];
 
-async function api(action, passcode) {
-  try {
-    let r = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action, adminKey: passcode })
-    });
-    
-    if (!r.ok) {
-      throw new Error(`HTTP error! status: ${r.status}`);
-    }
-    
-    return await r.json();
-  } catch (error) {
-    console.error("API Error:", error);
-    return { status: "error", message: error.message };
-  }
+async function api(action) {
+  let r = await fetch(API_URL, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify({ action, adminKey: ADMIN_PASSCODE })
+  });
+  return r.json();
 }
 
-document.getElementById("loginBtn").onclick = async () => {
+document.getElementById("loginBtn").onclick = () => {
   const val = document.getElementById("passcode").value;
   const err = document.getElementById("loginError");
-  
-  // Validates the passcode securely through your backend API rather than hardcoding it in the front-end
-  const res = await api("verifyAdmin", val);
-  
-  if (res && res.success) { // Adjust 'res.success' to match whatever your backend returns upon successful verification
+  if(val === ADMIN_PASSCODE) {
     err.textContent = "";
     document.getElementById("loginSection").style.display = "none";
     load();
@@ -171,9 +158,7 @@ document.getElementById("loginBtn").onclick = async () => {
 
 // Allow pressing 'Enter' to submit passcode
 document.getElementById("passcode").onkeypress = (e) => {
-  if (e.key === "Enter") {
-    document.getElementById("loginBtn").click();
-  }
+  if(e.key === "Enter") document.getElementById("loginBtn").click();
 };
 
 async function load() {
