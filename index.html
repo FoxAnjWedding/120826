@@ -110,7 +110,11 @@ document.getElementById("searchBtn").onclick = async () => {
     household.guests.forEach(g=>answers[g.id]=g.status||"");
     renderGuests();
     
-    document.getElementById("mobile").value=household.mobile||"";
+    // Strip leading quote if returning from sheet so it displays cleanly in the input field
+    let cleanMobile = household.mobile || "";
+    if (cleanMobile.startsWith("'")) cleanMobile = cleanMobile.substring(1);
+    document.getElementById("mobile").value=cleanMobile;
+    
     document.getElementById("dietary").value=household.dietary||"";
     document.getElementById("message").value=household.message||"";
     
@@ -140,10 +144,17 @@ function updateSummary(){
 document.getElementById("submitBtn").onclick=async()=>{
   const err=document.getElementById("submitError");err.textContent="";
   const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
+  
+  let rawMobile = document.getElementById("mobile").value.trim();
+  // Prepend single quote if it starts with 0 to force Google Sheets to treat it as text
+  if (rawMobile.startsWith("0")) {
+    rawMobile = "'" + rawMobile;
+  }
+
   try{
     const res=await api("submitRSVP",{
       householdId:household.id,answers,
-      mobile:document.getElementById("mobile").value.trim(),
+      mobile: rawMobile,
       dietary:document.getElementById("dietary").value.trim(),
       message:document.getElementById("message").value.trim()
     });
