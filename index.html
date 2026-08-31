@@ -26,6 +26,9 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
 </style>
 </head>
 <body>
+
+<audio id="bgAudio" src="HENRY - It's You (Violin Version).mp3" loop preload="auto" style="display:none;"></audio>
+
 <div class="wrap"><div class="card">
 <header class="hero">
   <div class="kicker">The Wedding of</div>
@@ -80,6 +83,21 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
 const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAttB8lXqb-H3y_ONahnaJAoceZLaaIvcZOnFOTGS8o1VwVf/exec";
 let household = null;
 let answers = {};
+
+// Auto-play background music on load with browser policy fallback
+window.addEventListener('DOMContentLoaded', () => {
+  const audio = document.getElementById('bgAudio');
+  audio.play().catch(() => {
+    // Fallback: Start audio on the first user interaction (click/touch anywhere) if blocked by mobile browser policies
+    const playAudioOnClick = () => {
+      audio.play();
+      window.removeEventListener('click', playAudioOnClick);
+      window.removeEventListener('touchstart', playAudioOnClick);
+    };
+    window.addEventListener('click', playAudioOnClick);
+    window.addEventListener('touchstart', playAudioOnClick);
+  });
+});
 
 function api(action, data={}) {
   return fetch(API_URL, {
