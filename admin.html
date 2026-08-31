@@ -43,8 +43,16 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .filter-group select, .filter-group input{margin-bottom:0;max-width:220px}
 .search-box{max-width:250px;margin-bottom:0!important}
 
-/* Table layout adjustments for desktop & mobile card stack */
-.table-container{margin-top:15px}
+/* Table layout adjustments & Fade transition wrapper */
+.table-container{margin-top:15px;position:relative}
+#rows {
+  opacity: 1;
+  transition: opacity 0.25s ease-in-out;
+}
+#rows.fade-out {
+  opacity: 0;
+}
+
 table{width:100%;border-collapse:collapse;text-align:left;font-size:13px;table-layout:fixed}
 th,td{padding:12px 8px;border-bottom:1px solid var(--line);word-wrap:break-word;overflow-wrap:break-word}
 th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-transform:uppercase}
@@ -251,39 +259,47 @@ function filterAndRender() {
   const statusVal = document.getElementById("statusFilter").value;
   const groupVal = document.getElementById("groupFilter").value;
   const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
+  const rowsEl = document.getElementById("rows");
 
-  let filtered = data.filter(x => {
-    let currentStatus = x.status || "Pending";
-    if (statusVal && currentStatus !== statusVal) return false;
-    if (groupVal && x.group !== groupVal) return false;
-    if (searchVal) {
-      let combinedText = `${x.name} ${x.group} ${x.mobile} ${x.dietary} ${x.message} ${currentStatus}`.toLowerCase();
-      if (!combinedText.includes(searchVal)) return false;
+  // Trigger smooth fade out transition
+  rowsEl.classList.add("fade-out");
+
+  setTimeout(() => {
+    let filtered = data.filter(x => {
+      let currentStatus = x.status || "Pending";
+      if (statusVal && currentStatus !== statusVal) return false;
+      if (groupVal && x.group !== groupVal) return false;
+      if (searchVal) {
+        let combinedText = `${x.name} ${x.group} ${x.mobile} ${x.dietary} ${x.message} ${currentStatus}`.toLowerCase();
+        if (!combinedText.includes(searchVal)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      rowsEl.innerHTML = `<tr><td colspan="7" style="text-align:center;" class="muted">No matching guest records found.</td></tr>`;
+    } else {
+      rowsEl.innerHTML = filtered.map(x => {
+        let statusClass = "pending";
+        let statusText = x.status || "Pending";
+        if(x.status === "Attending") statusClass = "attending";
+        else if(x.status === "Not Attending") statusClass = "declined";
+
+        return `<tr>
+          <td data-label="Guest"><strong>${e(x.name)}</strong></td>
+          <td data-label="Group">${e(x.group)}</td>
+          <td data-label="Status"><span class="tag ${statusClass}">${e(statusText)}</span></td>
+          <td data-label="Mobile">${e(x.mobile)}</td>
+          <td data-label="Dietary">${e(x.dietary)}</td>
+          <td data-label="Message">${e(x.message)}</td>
+          <td data-label="Updated">${e(formatTimestamp(x.updated))}</td>
+        </tr>`;
+      }).join("");
     }
-    return true;
-  });
 
-  if (filtered.length === 0) {
-    document.getElementById("rows").innerHTML = `<tr><td colspan="7" style="text-align:center;" class="muted">No matching guest records found.</td></tr>`;
-    return;
-  }
-
-  document.getElementById("rows").innerHTML = filtered.map(x => {
-    let statusClass = "pending";
-    let statusText = x.status || "Pending";
-    if(x.status === "Attending") statusClass = "attending";
-    else if(x.status === "Not Attending") statusClass = "declined";
-
-    return `<tr>
-      <td data-label="Guest"><strong>${e(x.name)}</strong></td>
-      <td data-label="Group">${e(x.group)}</td>
-      <td data-label="Status"><span class="tag ${statusClass}">${e(statusText)}</span></td>
-      <td data-label="Mobile">${e(x.mobile)}</td>
-      <td data-label="Dietary">${e(x.dietary)}</td>
-      <td data-label="Message">${e(x.message)}</td>
-      <td data-label="Updated">${e(formatTimestamp(x.updated))}</td>
-    </tr>`;
-  }).join("");
+    // Trigger smooth fade in transition
+    rowsEl.classList.remove("fade-out");
+  }, 200);
 }
 
 function e(s) {
