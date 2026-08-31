@@ -72,6 +72,7 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
       <div class="date">Fox & Anj · December 8, 2026</div>
     </header>
 
+    <!-- Login Section -->
     <div id="loginSection" class="login-box">
       <h2>Enter Passcode</h2>
       <p class="muted" style="margin-bottom:20px">Please enter the admin passcode to view guest RSVP records.</p>
@@ -80,6 +81,7 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
       <div id="loginError" class="error"></div>
     </div>
 
+    <!-- Dashboard Panel -->
     <div id="app">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <h2>RSVP Overview</h2>
@@ -111,6 +113,7 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
 
       <h3>Guest Responses</h3>
 
+      <!-- Controls bar: Category Filters & Mini Search Bar -->
       <div class="controls-bar">
         <div class="filter-group">
           <select id="statusFilter" onchange="filterAndRender()">
@@ -182,6 +185,22 @@ document.getElementById("loginBtn").onclick = () => {
 document.getElementById("passcode").onkeypress = (e) => {
   if(e.key === "Enter") document.getElementById("loginBtn").click();
 };
+
+// Helper function to format any raw date string into M/D/YYYY HH:MM:SS format
+function formatTimestamp(raw) {
+  if (!raw) return "";
+  let d = new Date(raw);
+  if (isNaN(d.getTime())) return raw; // Fallback if raw text isn't a valid date
+  
+  let month = d.getMonth() + 1;
+  let day = d.getDate();
+  let year = d.getFullYear();
+  let hours = String(d.getHours());
+  let minutes = String(d.getMinutes()).padStart(2, '0');
+  let seconds = String(d.getSeconds()).padStart(2, '0');
+  
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+}
 
 async function load() {
   const btn = document.getElementById("refreshBtn");
@@ -258,7 +277,7 @@ function filterAndRender() {
       <td>${e(x.mobile)}</td>
       <td>${e(x.dietary)}</td>
       <td>${e(x.message)}</td>
-      <td>${e(x.updated)}</td>
+      <td>${e(formatTimestamp(x.updated))}</td>
     </tr>`;
   }).join("");
 }
@@ -271,7 +290,11 @@ function e(s) {
 
 function downloadCSV() {
   let cols = ["name", "group", "status", "mobile", "dietary", "message", "updated"];
-  let csv = [cols.join(","), ...data.map(x => cols.map(c => `"${String(x[c] ?? "").replaceAll('"', '""')}"`).join(","))].join("\n");
+  let csv = [cols.join(","), ...data.map(x => cols.map(c => {
+    let val = x[c];
+    if (c === "updated") val = formatTimestamp(val);
+    return `"${String(val ?? "").replaceAll('"', '""')}"`;
+  }).join(","))].join("\n");
   let a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
   a.download = "wedding-rsvp-responses.csv";
