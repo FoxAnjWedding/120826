@@ -30,7 +30,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
 /* Dashboard UI & Smooth Transition */
 #app{opacity:0;max-height:0;overflow:hidden;transition:opacity 0.5s ease, max-height 0.5s ease;pointer-events:none}
-#app.visible{opacity:1;max-height:5000px;pointer-events:auto}
+#app.visible{opacity:1;max-height:8000px;pointer-events:auto}
 
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}
 .stat-card{background:#f4f0e6;padding:18px;text-align:center;border:1px solid var(--line)}
@@ -43,8 +43,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .filter-group select, .filter-group input{margin-bottom:0;max-width:220px}
 .search-box{max-width:250px;margin-bottom:0!important}
 
-/* Table layout adjustments to prevent horizontal scrolling */
-.table-container{margin-top:15px;overflow-x:hidden}
+/* Table layout adjustments for desktop & mobile card stack */
+.table-container{margin-top:15px}
 table{width:100%;border-collapse:collapse;text-align:left;font-size:13px;table-layout:fixed}
 th,td{padding:12px 8px;border-bottom:1px solid var(--line);word-wrap:break-word;overflow-wrap:break-word}
 th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-transform:uppercase}
@@ -55,11 +55,21 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
 .tag.pending{background:#eee9de;color:#777}
 .muted{color:#777;font-size:13px}
 
-@media(max-width:700px){
+/* Responsive mobile card stack layout to completely fix wrapping/overlapping issues */
+@media(max-width:768px){
+  .card{padding:16px 12px}
   .stats-grid{grid-template-columns:1fr 1fr}
   .controls-bar{flex-direction:column;align-items:stretch}
   .filter-group{flex-direction:column;align-items:stretch}
   .filter-group select, .filter-group input, .search-box{max-width:100%!important}
+
+  table, thead, tbody, th, td, tr { display: block; }
+  thead tr { position: absolute; top: -9999px; left: -9999px; }
+  table { border: none; table-layout: auto; }
+  tr { background: #fffdf8; border: 1px solid var(--line); border-radius: 4px; margin-bottom: 12px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+  td { border: none; border-bottom: 1px solid #f1eee5; position: relative; padding: 8px 6px 8px 42% !important; text-align: right; min-height: 36px; display: flex; align-items: center; justify-content: flex-end; }
+  td:last-child { border-bottom: none; }
+  td::before { position: absolute; left: 8px; width: 38%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; font-size: 11px; text-transform: uppercase; color: #777; content: attr(data-label); }
 }
 </style>
 </head>
@@ -72,7 +82,6 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
       <div class="date">Fox & Anj · December 8, 2026</div>
     </header>
 
-    <!-- Login Section -->
     <div id="loginSection" class="login-box">
       <h2>Enter Passcode</h2>
       <p class="muted" style="margin-bottom:20px">Please enter the admin passcode to view guest RSVP records.</p>
@@ -81,7 +90,6 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
       <div id="loginError" class="error"></div>
     </div>
 
-    <!-- Dashboard Panel -->
     <div id="app">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <h2>RSVP Overview</h2>
@@ -113,7 +121,6 @@ th{background:#f1eee5;font-weight:normal;letter-spacing:1px;font-size:11px;text-
 
       <h3>Guest Responses</h3>
 
-      <!-- Controls bar: Category Filters & Mini Search Bar -->
       <div class="controls-bar">
         <div class="filter-group">
           <select id="statusFilter" onchange="filterAndRender()">
@@ -186,11 +193,10 @@ document.getElementById("passcode").onkeypress = (e) => {
   if(e.key === "Enter") document.getElementById("loginBtn").click();
 };
 
-// Helper function to format any raw date string into M/D/YYYY HH:MM:SS format
 function formatTimestamp(raw) {
   if (!raw) return "";
   let d = new Date(raw);
-  if (isNaN(d.getTime())) return raw; // Fallback if raw text isn't a valid date
+  if (isNaN(d.getTime())) return raw;
   
   let month = d.getMonth() + 1;
   let day = d.getDate();
@@ -218,7 +224,6 @@ async function load() {
     let appEl = document.getElementById("app");
     appEl.classList.add("visible");
 
-    // Calculate metrics
     let total = data.length;
     let confirmed = data.filter(x => x.status === "Attending").length;
     let declined = data.filter(x => x.status === "Not Attending").length;
@@ -229,7 +234,6 @@ async function load() {
     document.getElementById("declined").textContent = declined;
     document.getElementById("pending").textContent = pending;
 
-    // Populate Group Filter Dropdown options dynamically
     let groupSet = [...new Set(data.map(x => x.group).filter(Boolean))].sort();
     let groupSelect = document.getElementById("groupFilter");
     groupSelect.innerHTML = '<option value="">All Groups</option>' + groupSet.map(g => `<option value="${e(g)}">${e(g)}</option>`).join("");
@@ -271,13 +275,13 @@ function filterAndRender() {
     else if(x.status === "Not Attending") statusClass = "declined";
 
     return `<tr>
-      <td><strong>${e(x.name)}</strong></td>
-      <td>${e(x.group)}</td>
-      <td><span class="tag ${statusClass}">${e(statusText)}</span></td>
-      <td>${e(x.mobile)}</td>
-      <td>${e(x.dietary)}</td>
-      <td>${e(x.message)}</td>
-      <td>${e(formatTimestamp(x.updated))}</td>
+      <td data-label="Guest"><strong>${e(x.name)}</strong></td>
+      <td data-label="Group">${e(x.group)}</td>
+      <td data-label="Status"><span class="tag ${statusClass}">${e(statusText)}</span></td>
+      <td data-label="Mobile">${e(x.mobile)}</td>
+      <td data-label="Dietary">${e(x.dietary)}</td>
+      <td data-label="Message">${e(x.message)}</td>
+      <td data-label="Updated">${e(formatTimestamp(x.updated))}</td>
     </tr>`;
   }).join("");
 }
