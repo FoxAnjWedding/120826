@@ -91,41 +91,35 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Gyroscope tracking variables for interactive wind effect
-let gyroX = 0; // Tilt left/right affects horizontal drift
+// Gyroscope tracking for wind effect
+let gyroX = 0; // horizontal tilt tracking
 
-// Automatically request orientation permissions on mobile or listen to deviceorientation
-function initGyroscope() {
-  if (typeof window.DeviceOrientationEvent !== 'undefined') {
-    if (typeof window.DeviceOrientationEvent.requestPermission === 'function') {
-      // iOS permission request bypassed/triggered seamlessly on first user touch/interaction
-      const requestOnTouch = () => {
-        window.DeviceOrientationEvent.requestPermission().then(response => {
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-          }
-        }).catch(console.error);
-        window.removeEventListener('click', requestOnTouch);
-        window.removeEventListener('touchstart', requestOnTouch);
-      };
-      window.addEventListener('click', requestOnTouch);
-      window.addEventListener('touchstart', requestOnTouch);
-    } else {
-      // Standard Android / desktop support
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
+function initGyro() {
+  // Request permission automatically on modern iOS devices upon first click/touch
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(response => {
+      if (response === 'granted') {
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+    }).catch(console.error);
+  } else {
+    window.addEventListener('deviceorientation', handleOrientation);
   }
 }
 
 function handleOrientation(e) {
-  // e.gamma represents left-to-right tilt (-90 to 90)
+  // e.gamma represents left-to-right tilt in degrees (-90 to 90)
   if (e.gamma !== null) {
-    gyroX = e.gamma * 0.15; // Scale down tilt factor for smooth wind drift
+    gyroX = e.gamma / 15; // scale down for smooth directional influence
   }
 }
-initGyroscope();
 
-// Falling petals effect: curved petals, slightly faster fall, blur lag, gyro wind response, front/back layers
+// Attach the silent gyro starter to the first user click/touch anywhere on the page
+window.addEventListener('click', initGyro, { once: true });
+window.addEventListener('touchstart', initGyro, { once: true });
+
+
+// Falling organic yellow petals with slightly faster movement, blur depth lag, and multi-layering
 const canvasBack = document.getElementById('petalCanvasBack');
 const ctxBack = canvasBack.getContext('2d');
 
@@ -153,7 +147,7 @@ function createPetals(count, isFront = false) {
       d: Math.random() * count,
       color: palette[Math.floor(Math.random() * palette.length)],
       tilt: Math.random() * Math.PI * 2,
-      tiltSpeed: (Math.random() * 0.012) - 0.006,
+      tiltSpeed: (Math.random() * 0.015) - 0.007,
       blur: isFront ? (Math.random() * 5 + 3) : (Math.random() * 2 + 1)
     });
   }
@@ -192,34 +186,35 @@ function updateAndDrawPetals(ctx, petals) {
 
 let angle = 0;
 function animatePetals() {
-  angle += 0.005;
+  angle += 0.006;
 
-  // Update back layer (slightly faster natural fall speed as requested)
+  // Update back layer (slightly faster fall speed, influenced dynamically by phone gyroX)
   backPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
-    p.y += (Math.cos(angle + p.d) + 1.5) * 0.22; 
-    p.x += Math.sin(angle) * 0.3 + gyroX; // Gyroscope wind influence applied here
+    p.y += (Math.cos(angle + p.d) + 1.4) * 0.28; 
+    p.x += (Math.sin(angle) * 0.3) + gyroX;
 
+    // Wrap around screen boundaries cleanly
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
       p.y = -30;
     }
-    if (p.x > window.innerWidth + 40) p.x = -30;
-    if (p.x < -40) p.x = window.innerWidth + 30;
+    if (p.x > window.innerWidth + 30) p.x = -30;
+    if (p.x < -30) p.x = window.innerWidth + 30;
   });
 
-  // Update front layer
+  // Update front layer (depth layer offset, slightly quicker fall, responsive to gyro)
   frontPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
-    p.y += (Math.cos(angle + p.d) + 1.7) * 0.3; 
-    p.x += Math.sin(angle * 1.1) * 0.5 + gyroX * 1.2; // Gyroscope wind influence scaled for depth
+    p.y += (Math.cos(angle + p.d) + 1.6) * 0.36; 
+    p.x += (Math.sin(angle * 1.1) * 0.5) + (gyroX * 1.2);
 
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
       p.y = -30;
     }
-    if (p.x > window.innerWidth + 40) p.x = -30;
-    if (p.x < -40) p.x = window.innerWidth + 30;
+    if (p.x > window.innerWidth + 30) p.x = -30;
+    if (p.x < -30) p.x = window.innerWidth + 30;
   });
 
   updateAndDrawPetals(ctxBack, backPetals);
