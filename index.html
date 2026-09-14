@@ -23,8 +23,8 @@
 
 label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink);transition:background 0.2s}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
 
-/* Petal Canvases with cinematic blur effect layer */
-#petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; filter: blur(1.5px); }
+/* Petal Canvases: Background and Foreground layers */
+#petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 #petalCanvasFront { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
 @media(max-width:500px){h1{font-size:34px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
@@ -91,7 +91,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Falling petals configuration with cinematic motion fade/trail and super slow drift
+// Falling petals effect with custom palette colors, cinematic motion blur lag, and front/back layering
 const canvasBack = document.getElementById('petalCanvasBack');
 const ctxBack = canvasBack.getContext('2d');
 
@@ -107,37 +107,44 @@ function resizeCanvases() {
 window.addEventListener('resize', resizeCanvases);
 resizeCanvases();
 
+// Color palette from the provided image samples
 const palette = ['#c8842b', '#df9635', '#f2ae43', '#fbc550', '#ffde6b'];
 
-function createPetals(count) {
+function createPetals(count, isFront = false) {
   const arr = [];
   for (let i = 0; i < count; i++) {
     arr.push({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight - window.innerHeight,
-      r: Math.random() * 5 + 4,
+      r: Math.random() * 5 + (isFront ? 6 : 4), // Front petals slightly larger for depth of field
       d: Math.random() * count,
       color: palette[Math.floor(Math.random() * palette.length)],
       tilt: Math.random() * 10 - 10,
-      tiltAngleIncremental: (Math.random() * 0.01) + 0.005,
-      tiltAngle: 0
+      tiltAngleIncremental: (Math.random() * 0.015) + 0.005,
+      tiltAngle: 0,
+      blur: isFront ? (Math.random() * 4 + 2) : (Math.random() * 2) // Cinematic depth blur lag
     });
   }
   return arr;
 }
 
-const backPetals = createPetals(14);
-const frontPetals = createPetals(7);
+const backPetals = createPetals(14, false);
+const frontPetals = createPetals(8, true);
 
 function updateAndDrawPetals(ctx, petals) {
-  // Use a slight semi-transparent clear rect instead of hard wipe to create a subtle cinematic motion trail/lag blur effect
-  ctx.fillStyle = 'rgba(248, 244, 236, 0.2)';
-  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   
   petals.forEach((p) => {
     ctx.save();
     ctx.translate(p.x + p.r, p.y);
     ctx.rotate(p.tilt);
+    
+    // Apply cinematic blur lag/depth-of-field shadow effect
+    if (p.blur > 0.5) {
+      ctx.shadowBlur = p.blur;
+      ctx.shadowColor = p.color;
+    }
+
     ctx.fillStyle = p.color;
     ctx.beginPath();
     ctx.ellipse(0, 0, p.r, p.r * 0.55, 0, 0, Math.PI * 2);
@@ -148,12 +155,13 @@ function updateAndDrawPetals(ctx, petals) {
 
 let angle = 0;
 function animatePetals() {
-  angle += 0.004; // Extremely smooth, slow time progression
+  angle += 0.005;
 
+  // Update back layer (extra smooth and slow fall)
   backPetals.forEach((p) => {
     p.tiltAngle += p.tiltAngleIncremental;
-    p.y += (Math.cos(angle + p.d) + 1 + p.r / 5) * 0.12; // Very slow graceful descent
-    p.x += Math.sin(angle) * 0.25;
+    p.y += (Math.cos(angle + p.d) + 1 + p.r / 4) * 0.15; 
+    p.x += Math.sin(angle) * 0.3;
     p.tilt = Math.sin(p.tiltAngle) * 0.4;
 
     if (p.y > window.innerHeight + 20) {
@@ -162,10 +170,11 @@ function animatePetals() {
     }
   });
 
+  // Update front layer (cinematic depth lag offset)
   frontPetals.forEach((p) => {
     p.tiltAngle += p.tiltAngleIncremental;
-    p.y += (Math.cos(angle + p.d) + 1.2 + p.r / 4) * 0.16; // Slightly closer layer falling softly
-    p.x += Math.sin(angle * 1.1) * 0.35;
+    p.y += (Math.cos(angle + p.d) + 1.2 + p.r / 3) * 0.22; 
+    p.x += Math.sin(angle * 1.1) * 0.5;
     p.tilt = Math.sin(p.tiltAngle) * 0.6;
 
     if (p.y > window.innerHeight + 20) {
