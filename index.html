@@ -6,8 +6,8 @@
 <title>Reggie & Angelika — RSVP</title>
 <style>
 :root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--sage:#7d8a70;--gold:#b79b63;--line:#ded8ca}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
-.wrap{max-width:680px;margin:auto;padding:28px 18px 60px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;overflow:hidden;position:relative}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow-x:hidden}
+.wrap{max-width:680px;margin:auto;padding:28px 18px 60px;position:relative;z-index:2}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;overflow:hidden;position:relative}
 .hero{text-align:center;padding:52px 24px 34px;background:linear-gradient(#fffdf8ee,#fffdf8ee),url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80") center/cover}
 .kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:42px;font-weight:400;margin:15px 0 8px}h2{font-size:25px;font-weight:400;margin:0 0 10px}
 
@@ -22,11 +22,16 @@
 .success .mark{font-size:42px;color:var(--sage)}
 
 label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink);transition:background 0.2s}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
+
+/* Petal Canvas Overlay */
+#petalCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
 @media(max-width:500px){h1{font-size:34px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
 </style>
 </head>
 <body>
 
+<canvas id="petalCanvas"></canvas>
 <audio id="bgAudio" src="HENRY - It's You (Violin Version).mp3" loop preload="auto" style="display:none;"></audio>
 
 <div class="wrap"><div class="card">
@@ -84,11 +89,77 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
+// Falling yellow/gold petals effect
+const canvas = document.getElementById('petalCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const petals = [];
+const numPetals = 22;
+
+for (let i = 0; i < numPetals; i++) {
+  petals.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height - canvas.height,
+    r: Math.random() * 6 + 5, // size
+    d: Math.random() * numPetals, // density offset
+    color: Math.random() > 0.4 ? '#b79b63' : '#dfbe6b', // matching site gold tones
+    tilt: Math.random() * 10 - 10,
+    tiltAngleIncremental: (Math.random() * 0.05) + 0.03,
+    tiltAngle: 0
+  });
+}
+
+function drawPetals() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  petals.forEach((p) => {
+    ctx.save();
+    ctx.translate(p.x + p.r, p.y);
+    ctx.rotate(p.tilt);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.r, p.r * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  updatePetals();
+}
+
+let angle = 0;
+function updatePetals() {
+  angle += 0.01;
+  petals.forEach((p) => {
+    p.tiltAngle += p.tiltAngleIncremental;
+    p.y += (Math.cos(angle + p.d) + 1 + p.r / 3) * 0.4;
+    p.x += Math.sin(angle) * 0.8;
+    p.tilt = Math.sin(p.tiltAngle) * 0.6;
+
+    if (p.y > canvas.height + 20) {
+      p.x = Math.random() * canvas.width;
+      p.y = -20;
+      p.tilt = Math.random() * 10 - 10;
+    }
+  });
+}
+
+function loop() {
+  drawPetals();
+  requestAnimationFrame(loop);
+}
+loop();
+
 // Auto-play background music on load with browser policy fallback
 window.addEventListener('DOMContentLoaded', () => {
   const audio = document.getElementById('bgAudio');
   audio.play().catch(() => {
-    // Fallback: Start audio on the first user interaction (click/touch anywhere) if blocked by mobile browser policies
     const playAudioOnClick = () => {
       audio.play();
       window.removeEventListener('click', playAudioOnClick);
