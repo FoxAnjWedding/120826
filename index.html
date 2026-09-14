@@ -23,6 +23,9 @@
 
 label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink);transition:background 0.2s}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
 
+/* Gyro Permission Banner Overlay */
+#gyroPermissionBanner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(63,64,55,0.9);color:#fffdf8;padding:10px 20px;border-radius:30px;font-size:12px;z-index:10;cursor:pointer;display:none;box-shadow:0 4px 15px rgba(0,0,0,0.2);letter-spacing:0.5px}
+
 /* Petal Canvases: Background and Foreground layers */
 #petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 #petalCanvasFront { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
@@ -34,6 +37,7 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
 
 <canvas id="petalCanvasBack"></canvas>
 <canvas id="petalCanvasFront"></canvas>
+<div id="gyroPermissionBanner">Enable Motion Wind Effect</div>
 <audio id="bgAudio" src="HENRY - It's You (Violin Version).mp3" loop preload="auto" style="display:none;"></audio>
 
 <div class="wrap"><div class="card">
@@ -91,7 +95,39 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Falling petals effect: styled into organic curved/tapered leaf shapes matching the reference image, randomized palette, slow speed, blur lag, and front/back layers
+// Gyroscope tracking variables for interactive wind direction
+let gyroX = 0;
+let gyroY = 0;
+
+function setupGyroscope() {
+  const banner = document.getElementById('gyroPermissionBanner');
+  
+  if (typeof window.DeviceOrientationEvent !== 'undefined' && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ permission request requirement
+    banner.style.display = 'block';
+    banner.onclick = () => {
+      window.DeviceOrientationEvent.requestPermission()
+        .then(response => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+            banner.style.display = 'none';
+          }
+        }).catch(console.error);
+    };
+  } else if (window.DeviceOrientationEvent) {
+    // Android & standard supporting browsers
+    window.addEventListener('deviceorientation', handleOrientation);
+  }
+}
+
+function handleOrientation(e) {
+  // e.gamma is left/right tilt (-90 to 90), e.beta is front/back tilt (-180 to 180)
+  if (e.gamma !== null) gyroX = e.gamma / 15; 
+  if (e.beta !== null) gyroY = (e.beta - 45) / 15; // neutral hold offset
+}
+setupGyroscope();
+
+// Falling petals effect with custom palette, slightly faster speed, gyro wind drift, cinematic blur lag, and front/back layers
 const canvasBack = document.getElementById('petalCanvasBack');
 const ctxBack = canvasBack.getContext('2d');
 
@@ -107,7 +143,7 @@ function resizeCanvases() {
 window.addEventListener('resize', resizeCanvases);
 resizeCanvases();
 
-// Exact color palette tones matching the yellow color theme
+// Color palette matching the yellow tone samples
 const palette = ['#c8842b', '#df9635', '#f2ae43', '#fbc550', '#ffde6b'];
 
 function createPetals(count, isFront = false) {
@@ -116,12 +152,12 @@ function createPetals(count, isFront = false) {
     arr.push({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight - window.innerHeight,
-      scale: Math.random() * 0.6 + (isFront ? 0.9 : 0.6), // Scale factor for organic petal size
+      scale: Math.random() * 0.6 + (isFront ? 0.9 : 0.6),
       d: Math.random() * count,
       color: palette[Math.floor(Math.random() * palette.length)],
       tilt: Math.random() * Math.PI * 2,
-      tiltSpeed: (Math.random() * 0.01) - 0.005,
-      blur: isFront ? (Math.random() * 5 + 3) : (Math.random() * 2 + 1) // Cinematic depth blur lag
+      tiltSpeed: (Math.random() * 0.015) - 0.007,
+      blur: isFront ? (Math.random() * 5 + 3) : (Math.random() * 2 + 1)
     });
   }
   return arr;
@@ -130,7 +166,7 @@ function createPetals(count, isFront = false) {
 const backPetals = createPetals(12, false);
 const frontPetals = createPetals(7, true);
 
-// Custom drawing function for an organic curved yellow petal shape (resembling the reference photos)
+// Custom organic curved petal drawing matching original code style
 function drawCurvedPetal(ctx, p) {
   ctx.save();
   ctx.translate(p.x, p.y);
@@ -144,7 +180,6 @@ function drawCurvedPetal(ctx, p) {
 
   ctx.fillStyle = p.color;
   ctx.beginPath();
-  // Organic curved leaf/petal path: sweeping tapering body with a pointed tip
   ctx.moveTo(-16, 0);
   ctx.bezierCurveTo(-10, -8, 5, -10, 16, -2);
   ctx.bezierCurveTo(8, 2, -2, 6, -16, 0);
@@ -161,30 +196,34 @@ function updateAndDrawPetals(ctx, petals) {
 
 let angle = 0;
 function animatePetals() {
-  angle += 0.004;
+  angle += 0.006;
 
-  // Update back layer (extra smooth, gentle, and slow fall)
+  // Update back layer (smooth falling with responsive gyro drift)
   backPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
-    p.y += (Math.cos(angle + p.d) + 1.2) * 0.12; 
-    p.x += Math.sin(angle) * 0.25;
+    p.y += (Math.cos(angle + p.d) + 1.4) * 0.22; // slightly faster drop speed
+    p.x += Math.sin(angle) * 0.35 + gyroX * 0.8; // influenced by phone gyro tilt
 
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
       p.y = -30;
     }
+    if (p.x > window.innerWidth + 30) p.x = -30;
+    if (p.x < -30) p.x = window.innerWidth + 30;
   });
 
-  // Update front layer (cinematic depth lag offset, slightly faster)
+  // Update front layer (slightly faster foreground drift with depth blur)
   frontPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
-    p.y += (Math.cos(angle + p.d) + 1.4) * 0.18; 
-    p.x += Math.sin(angle * 1.1) * 0.4;
+    p.y += (Math.cos(angle + p.d) + 1.6) * 0.32; // slightly faster drop speed
+    p.x += Math.sin(angle * 1.1) * 0.5 + gyroX * 1.2; // influenced by phone gyro tilt
 
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
       p.y = -30;
     }
+    if (p.x > window.innerWidth + 30) p.x = -30;
+    if (p.x < -30) p.x = window.innerWidth + 30;
   });
 
   updateAndDrawPetals(ctxBack, backPetals);
