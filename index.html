@@ -91,7 +91,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Gyroscope tracking for wind effect without prompting explicit permission popups where unsupported
+// Gyroscope handling without manual permission popup dialogs where possible
 let gyroX = 0;
 
 function handleOrientation(e) {
@@ -100,13 +100,26 @@ function handleOrientation(e) {
   }
 }
 
-// Directly bind to orientation event without triggering explicit browser permission requests
-if (window.DeviceOrientationEvent) {
-  window.addEventListener('deviceorientation', handleOrientation, true);
+function initGyroSilently() {
+  // iOS 13+ devices require explicit permission via requestPermission, but it MUST be triggered 
+  // directly inside a user interaction handler (like click/touch). By attaching this silently 
+  // on the very first page click/touch, it requests permission seamlessly without a custom button.
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(response => {
+      if (response === 'granted') {
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+    }).catch(() => {});
+  } else {
+    window.addEventListener('deviceorientation', handleOrientation);
+  }
 }
 
+window.addEventListener('click', initGyroSilently, { once: true });
+window.addEventListener('touchstart', initGyroSilently, { once: true });
 
-// Falling organic yellow petals with slightly faster movement, blur depth lag, and multi-layering
+
+// Falling organic yellow petals (scaled down slightly smaller, falling slightly faster)
 const canvasBack = document.getElementById('petalCanvasBack');
 const ctxBack = canvasBack.getContext('2d');
 
@@ -130,12 +143,12 @@ function createPetals(count, isFront = false) {
     arr.push({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight - window.innerHeight,
-      scale: Math.random() * 0.6 + (isFront ? 0.9 : 0.6),
+      scale: (Math.random() * 0.4 + (isFront ? 0.7 : 0.45)), // Scaled smaller per request
       d: Math.random() * count,
       color: palette[Math.floor(Math.random() * palette.length)],
       tilt: Math.random() * Math.PI * 2,
-      tiltSpeed: (Math.random() * 0.015) - 0.007,
-      blur: isFront ? (Math.random() * 5 + 3) : (Math.random() * 2 + 1)
+      tiltSpeed: (Math.random() * 0.018) - 0.009,
+      blur: isFront ? (Math.random() * 4 + 2) : (Math.random() * 1.5 + 0.5)
     });
   }
   return arr;
@@ -173,12 +186,13 @@ function updateAndDrawPetals(ctx, petals) {
 
 let angle = 0;
 function animatePetals() {
-  angle += 0.006;
+  angle += 0.007;
 
+  // Faster falling speed and gyro drift integration
   backPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
-    p.y += (Math.cos(angle + p.d) + 1.4) * 0.28; 
-    p.x += (Math.sin(angle) * 0.3) + gyroX;
+    p.y += (Math.cos(angle + p.d) + 1.5) * 0.35; 
+    p.x += (Math.sin(angle) * 0.35) + gyroX;
 
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
@@ -190,8 +204,8 @@ function animatePetals() {
 
   frontPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
-    p.y += (Math.cos(angle + p.d) + 1.6) * 0.36; 
-    p.x += (Math.sin(angle * 1.1) * 0.5) + (gyroX * 1.2);
+    p.y += (Math.cos(angle + p.d) + 1.7) * 0.45; 
+    p.x += (Math.sin(angle * 1.1) * 0.55) + (gyroX * 1.25);
 
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
