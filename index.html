@@ -91,32 +91,19 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Gyroscope tracking for wind effect
-let gyroX = 0; // horizontal tilt tracking
-
-function initGyro() {
-  // Request permission automatically on modern iOS devices upon first click/touch
-  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission().then(response => {
-      if (response === 'granted') {
-        window.addEventListener('deviceorientation', handleOrientation);
-      }
-    }).catch(console.error);
-  } else {
-    window.addEventListener('deviceorientation', handleOrientation);
-  }
-}
+// Gyroscope tracking for wind effect without prompting explicit permission popups where unsupported
+let gyroX = 0;
 
 function handleOrientation(e) {
-  // e.gamma represents left-to-right tilt in degrees (-90 to 90)
   if (e.gamma !== null) {
-    gyroX = e.gamma / 15; // scale down for smooth directional influence
+    gyroX = e.gamma / 15;
   }
 }
 
-// Attach the silent gyro starter to the first user click/touch anywhere on the page
-window.addEventListener('click', initGyro, { once: true });
-window.addEventListener('touchstart', initGyro, { once: true });
+// Directly bind to orientation event without triggering explicit browser permission requests
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', handleOrientation, true);
+}
 
 
 // Falling organic yellow petals with slightly faster movement, blur depth lag, and multi-layering
@@ -188,13 +175,11 @@ let angle = 0;
 function animatePetals() {
   angle += 0.006;
 
-  // Update back layer (slightly faster fall speed, influenced dynamically by phone gyroX)
   backPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
     p.y += (Math.cos(angle + p.d) + 1.4) * 0.28; 
     p.x += (Math.sin(angle) * 0.3) + gyroX;
 
-    // Wrap around screen boundaries cleanly
     if (p.y > window.innerHeight + 30) {
       p.x = Math.random() * window.innerWidth;
       p.y = -30;
@@ -203,7 +188,6 @@ function animatePetals() {
     if (p.x < -30) p.x = window.innerWidth + 30;
   });
 
-  // Update front layer (depth layer offset, slightly quicker fall, responsive to gyro)
   frontPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
     p.y += (Math.cos(angle + p.d) + 1.6) * 0.36; 
