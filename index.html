@@ -23,15 +23,17 @@
 
 label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink);transition:background 0.2s}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
 
-/* Petal Canvas Overlay */
-#petalCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+/* Petal Canvases: Background and Foreground layers */
+#petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+#petalCanvasFront { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
 @media(max-width:500px){h1{font-size:34px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
 </style>
 </head>
 <body>
 
-<canvas id="petalCanvas"></canvas>
+<canvas id="petalCanvasBack"></canvas>
+<canvas id="petalCanvasFront"></canvas>
 <audio id="bgAudio" src="HENRY - It's You (Violin Version).mp3" loop preload="auto" style="display:none;"></audio>
 
 <div class="wrap"><div class="card">
@@ -89,35 +91,47 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Falling yellow/gold petals effect
-const canvas = document.getElementById('petalCanvas');
-const ctx = canvas.getContext('2d');
+// Falling petals effect with custom palette colors, slow speed, and front/back layering
+const canvasBack = document.getElementById('petalCanvasBack');
+const ctxBack = canvasBack.getContext('2d');
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+const canvasFront = document.getElementById('petalCanvasFront');
+const ctxFront = canvasFront.getContext('2d');
+
+function resizeCanvases() {
+  canvasBack.width = window.innerWidth;
+  canvasBack.height = window.innerHeight;
+  canvasFront.width = window.innerWidth;
+  canvasFront.height = window.innerHeight;
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
 
-const petals = [];
-const numPetals = 22;
+// Color palette extracted from the provided image samples
+const palette = ['#c8842b', '#df9635', '#f2ae43', '#fbc550', '#ffde6b'];
 
-for (let i = 0; i < numPetals; i++) {
-  petals.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height - canvas.height,
-    r: Math.random() * 6 + 5, // size
-    d: Math.random() * numPetals, // density offset
-    color: Math.random() > 0.4 ? '#b79b63' : '#dfbe6b', // matching site gold tones
-    tilt: Math.random() * 10 - 10,
-    tiltAngleIncremental: (Math.random() * 0.05) + 0.03,
-    tiltAngle: 0
-  });
+function createPetals(count) {
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    arr.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight - window.innerHeight,
+      r: Math.random() * 5 + 4, // subtle sizes
+      d: Math.random() * count,
+      color: palette[Math.floor(Math.random() * palette.length)],
+      tilt: Math.random() * 10 - 10,
+      tiltAngleIncremental: (Math.random() * 0.02) + 0.01,
+      tiltAngle: 0
+    });
+  }
+  return arr;
 }
 
-function drawPetals() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+const backPetals = createPetals(15);
+const frontPetals = createPetals(8);
+
+function updateAndDrawPetals(ctx, petals) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   
   petals.forEach((p) => {
     ctx.save();
@@ -129,32 +143,44 @@ function drawPetals() {
     ctx.fill();
     ctx.restore();
   });
-
-  updatePetals();
 }
 
 let angle = 0;
-function updatePetals() {
-  angle += 0.01;
-  petals.forEach((p) => {
-    p.tiltAngle += p.tiltAngleIncremental;
-    p.y += (Math.cos(angle + p.d) + 1 + p.r / 3) * 0.4;
-    p.x += Math.sin(angle) * 0.8;
-    p.tilt = Math.sin(p.tiltAngle) * 0.6;
+function animatePetals() {
+  angle += 0.008;
 
-    if (p.y > canvas.height + 20) {
-      p.x = Math.random() * canvas.width;
+  // Update back layer (slower speed multiplier)
+  backPetals.forEach((p) => {
+    p.tiltAngle += p.tiltAngleIncremental;
+    p.y += (Math.cos(angle + p.d) + 1 + p.r / 4) * 0.2; // slower falling speed
+    p.x += Math.sin(angle) * 0.4;
+    p.tilt = Math.sin(p.tiltAngle) * 0.5;
+
+    if (p.y > window.innerHeight + 20) {
+      p.x = Math.random() * window.innerWidth;
       p.y = -20;
-      p.tilt = Math.random() * 10 - 10;
     }
   });
-}
 
-function loop() {
-  drawPetals();
-  requestAnimationFrame(loop);
+  // Update front layer (slightly larger / independent movement)
+  frontPetals.forEach((p) => {
+    p.tiltAngle += p.tiltAngleIncremental;
+    p.y += (Math.cos(angle + p.d) + 1.2 + p.r / 3) * 0.25; // slow graceful fall
+    p.x += Math.sin(angle * 1.2) * 0.6;
+    p.tilt = Math.sin(p.tiltAngle) * 0.7;
+
+    if (p.y > window.innerHeight + 20) {
+      p.x = Math.random() * window.innerWidth;
+      p.y = -20;
+    }
+  });
+
+  updateAndDrawPetals(ctxBack, backPetals);
+  updateAndDrawPetals(ctxFront, frontPetals);
+
+  requestAnimationFrame(animatePetals);
 }
-loop();
+animatePetals();
 
 // Auto-play background music on load with browser policy fallback
 window.addEventListener('DOMContentLoaded', () => {
@@ -235,7 +261,7 @@ document.getElementById("submitBtn").onclick=async()=>{
   const err=document.getElementById("submitError");err.textContent="";
   const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
   
-  let rawMobile = document.getElementById("mobile").value.trim();
+  let rawMobile = document.getElementById("mobile").value.test ? document.getElementById("mobile").value.trim() : document.getElementById("mobile").value.trim();
   if (rawMobile.startsWith("0")) {
     rawMobile = "'" + rawMobile;
   }
