@@ -60,6 +60,16 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 .small{font-size:11px;text-transform:none;letter-spacing:0}
 .footer{text-align:center;padding:24px;color:#888;font-size:12px;letter-spacing:1px}
 
+/* Custom Soft Modal Overlay Styles */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(63,64,55,0.4);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;visibility:hidden;transition:opacity 0.3s ease, visibility 0.3s ease}
+.modal-overlay.active{opacity:1;visibility:visible}
+.modal-box{background:var(--paper);border:1px solid var(--line);box-shadow:0 15px 40px rgba(0,0,0,0.1);border-radius:3px;width:90%;max-width:440px;padding:32px 28px;transform:translateY(12px) scale(0.97);transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);text-align:center}
+.modal-overlay.active .modal-box{transform:translateY(0) scale(1)}
+.modal-box h3{font-family:'Pinyon Script', cursive;font-size:42px;color:var(--gold);margin:0 0 12px;font-weight:400}
+.modal-box p{font-size:14px;color:var(--ink);line-height:1.6;margin:0 0 24px}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1}
+
 #petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 #petalCanvasFront { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
@@ -71,6 +81,18 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 <canvas id="petalCanvasBack"></canvas>
 <canvas id="petalCanvasFront"></canvas>
 <audio id="bgAudio" src="HENRY - It's You (Violin Version).mp3" loop preload="auto" style="display:none;"></audio>
+
+<!-- Custom Soft Modal Dialog -->
+<div id="customModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>Pending Response</h3>
+    <p id="modalText"></p>
+    <div class="modal-actions">
+      <button class="secondary" id="modalCancelBtn">Review/Edit</button>
+      <button id="modalConfirmBtn">Proceed Anyway</button>
+    </div>
+  </div>
+</div>
 
 <div class="wrap"><div class="card">
 <header class="hero">
@@ -305,19 +327,41 @@ function updateSummary(){
   document.getElementById("seatSummary").textContent=`${yes} seat${yes!==1?"s":""} confirmed`;
 }
 
+// Custom Modal Controls & Submission Flow
+function showConfirmModal(namesList) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("customModal");
+    const modalText = document.getElementById("modalText");
+    const confirmBtn = document.getElementById("modalConfirmBtn");
+    const cancelBtn = document.getElementById("modalCancelBtn");
+
+    modalText.textContent = `The RSVP for ${namesList} is still pending. We would love to get your final response before the deadline so we can finalize our guest list. Would you like to proceed with your submission for now?`;
+    
+    modal.classList.add("active");
+
+    const cleanup = (result) => {
+      modal.classList.remove("active");
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+      modal.onclick = null;
+      resolve(result);
+    };
+
+    confirmBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+  });
+}
+
 document.getElementById("submitBtn").onclick = async () => {
   const err = document.getElementById("submitError"); 
   err.textContent = "";
 
-  // Check for any guests with missing answers (pending)
   const pendingGuests = household.guests.filter(g => !answers[g.id]);
   if (pendingGuests.length > 0) {
     const namesList = pendingGuests.map(g => g.name).join(", ");
-    const confirmMessage = `${namesList} ${pendingGuests.length > 1 ? 'are' : 'is'} still pending. We would love to hear back/update the RSVP response before the deadline as we finalize our guest list. Would you like to proceed with submitting anyway?`;
-    
-    if (!confirm(confirmMessage)) {
-      return;
-    }
+    const proceed = await showConfirmModal(namesList);
+    if (!proceed) return;
   }
 
   const btn = document.getElementById("submitBtn");
