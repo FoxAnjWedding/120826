@@ -209,11 +209,15 @@ function formatTimestamp(raw) {
   let month = d.getMonth() + 1;
   let day = d.getDate();
   let year = d.getFullYear();
-  let hours = String(d.getHours());
+  let hours = d.getHours();
   let minutes = String(d.getMinutes()).padStart(2, '0');
   let seconds = String(d.getSeconds()).padStart(2, '0');
   
-  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+  let ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
 }
 
 async function load() {
