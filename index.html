@@ -107,7 +107,7 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
       <label>Message for the couple <span class="small">(optional)</span></label>
       <textarea id="message" rows="3" placeholder="Leave us a little message"></textarea>
     </div>
-    <div style="margin-top:24px"><button id="submitBtn" disabled>Submit RSVP</button></div>
+    <div style="margin-top:24px"><button id="submitBtn">Submit RSVP</button></div>
     <div id="submitError" class="error"></div>
   </section>
 
@@ -292,7 +292,6 @@ function renderGuests(){
 }
 
 function setAnswer(id, val) {
-  // If the user clicks the button that is already selected, clear it out
   if (answers[id] === val) {
     answers[id] = "";
   } else {
@@ -302,35 +301,50 @@ function setAnswer(id, val) {
 }
 
 function updateSummary(){
-  const all=household.guests.every(g=>answers[g.id]);
   const yes=household.guests.filter(g=>answers[g.id]==="Attending").length;
   document.getElementById("seatSummary").textContent=`${yes} seat${yes!==1?"s":""} confirmed`;
-  document.getElementById("submitBtn").disabled=!all;
 }
 
-document.getElementById("submitBtn").onclick=async()=>{
-  const err=document.getElementById("submitError");err.textContent="";
-  const btn=document.getElementById("submitBtn");
-  btn.disabled=true;
+document.getElementById("submitBtn").onclick = async () => {
+  const err = document.getElementById("submitError"); 
+  err.textContent = "";
+
+  // Check for any guests with missing answers (pending)
+  const pendingGuests = household.guests.filter(g => !answers[g.id]);
+  if (pendingGuests.length > 0) {
+    const namesList = pendingGuests.map(g => g.name).join(", ");
+    const confirmMessage = `${namesList} ${pendingGuests.length > 1 ? 'are' : 'is'} still pending. We would love to hear back/update the RSVP response before the deadline as we finalize our guest list. Would you like to proceed with submitting anyway?`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Submitting…';
 
   let rawMobile = document.getElementById("mobile").value.trim();
   if (rawMobile.startsWith("0")) { rawMobile = "'" + rawMobile; }
-  try{
-    const res=await api("submitRSVP",{
-      householdId:household.id,answers,
+  
+  try {
+    const res = await api("submitRSVP",{
+      householdId: household.id, 
+      answers,
       mobile: rawMobile,
-      dietary:document.getElementById("dietary").value.trim(),
-      message:document.getElementById("message").value.trim()
+      dietary: document.getElementById("dietary").value.trim(),
+      message: document.getElementById("message").value.trim()
     });
-    if(!res.ok){err.textContent=res.message||"Unable to save your RSVP.";return}
-    const yes=Object.values(answers).filter(x=>x==="Attending").length;
-    document.getElementById("successText").textContent=`Thank you for confirming. We have ${yes} guest${yes!==1?"s":""} attending from your invitation.`;
+    if (!res.ok) { err.textContent = res.message || "Unable to save your RSVP."; return; }
+    
+    const yes = Object.values(answers).filter(x => x === "Attending").length;
+    document.getElementById("successText").textContent = `Thank you for confirming. We have recorded your responses (${yes} guest${yes!==1?"s":""} attending).`;
     switchSection("rsvpSection", "successSection");
-  }catch(e){err.textContent="Unable to save your RSVP. Please try again."}
-  finally{
-    btn.disabled=false;
-    btn.textContent="Submit RSVP";
+  } catch(e) {
+    err.textContent = "Unable to save your RSVP. Please try again.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Submit RSVP";
   }
 };
 </script>
