@@ -290,7 +290,17 @@ function renderGuests(){
     </div></div>`).join("");
   updateSummary();
 }
-function setAnswer(id,val){answers[id]=val;renderGuests()}
+
+function setAnswer(id, val) {
+  // If the user clicks the button that is already selected, clear it out
+  if (answers[id] === val) {
+    answers[id] = "";
+  } else {
+    answers[id] = val;
+  }
+  renderGuests();
+}
+
 function updateSummary(){
   const all=household.guests.every(g=>answers[g.id]);
   const yes=household.guests.filter(g=>answers[g.id]==="Attending").length;
