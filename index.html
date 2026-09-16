@@ -4,37 +4,58 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Reggie & Angelika — RSVP</title>
-<!-- Added Pinyon Script Font -->
+<!-- Pinyon Script Font -->
 <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
 <style>
-:root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--sage:#7d8a70;--gold:#b79b63;--line:#ded8ca}
+:root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--gold:#b79b63;--gold-dark:#9c814e;--line:#ded8ca}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow-x:hidden}
-.wrap{max-width:680px;margin:auto;padding:28px 18px 60px;position:relative;z-index:2}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;overflow:hidden;position:relative}
-.hero{text-align:center;padding:52px 24px 34px;background:linear-gradient(#fffdf8ee,#fffdf8ee),url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80") center/cover}
-.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}
+.wrap{max-width:680px;margin:auto;padding:36px 18px 60px;position:relative;z-index:2}
+.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,0.06);overflow:hidden;position:relative;border-radius:3px}
+.card::before{content:"";position:absolute;top:6px;bottom:6px;left:6px;right:6px;border:1px solid var(--line);pointer-events:none;opacity:0.6}
 
-/* Updated H1 to use Pinyon Script font */
-h1{font-family:'Pinyon Script', cursive;font-size:72px;font-weight:400;margin:10px 0 8px;color:var(--gold)}
+.hero{text-align:center;padding:58px 24px 38px;background:linear-gradient(#fffdf8ee,#fffdf8ee),url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80") center/cover}
+.kicker{letter-spacing:5px;text-transform:uppercase;font-size:11px;color:var(--gold);font-weight:600}
 
-h2{font-size:25px;font-weight:400;margin:0 0 10px}
+/* H1 with script font including the ampersand */
+h1{font-family:'Pinyon Script', cursive;font-size:76px;font-weight:400;margin:12px 0 6px;color:var(--gold);line-height:1}
 
-/* Updated .date with white-space: nowrap and adjusted font-size for mobile screens */
-.date{font-size:14px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.date{font-size:13px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;color:#666}
 
 /* Smooth Transition Styles */
 .section-container{position:relative;min-height:220px}
-.page-section{padding:30px 28px;border-top:1px solid var(--line);position:absolute;top:0;left:0;width:100%;opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;pointer-events:none}
+.page-section{padding:36px 32px;border-top:1px solid var(--line);position:absolute;top:0;left:0;width:100%;opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;pointer-events:none}
 .page-section.active{position:relative;opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
 .success{text-align:center;padding:48px 28px}
-.success .mark{font-size:42px;color:var(--sage)}
+.success .mark{font-size:42px;color:var(--gold)}
 
-label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:100%;padding:13px 14px;border:1px solid #cfc8b8;background:#fff;font:inherit;color:var(--ink);border-radius:2px}button{border:0;background:var(--sage);color:white;padding:13px 20px;font:inherit;cursor:pointer;border-radius:2px}button.secondary{background:#eee9de;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}.muted{color:#777;font-size:13px}.guest{padding:15px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}.guest-name{font-size:18px;margin-bottom:10px}.choices{display:flex;gap:8px}.choices button{flex:1;background:#eee9de;color:var(--ink);transition:background 0.2s}.choices button.active{background:var(--sage);color:#fff}.summary{background:#f1eee5;padding:16px;margin-top:16px;font-size:14px}.error{color:#9b4d42;font-size:13px;margin-top:8px}.small{font-size:12px}.footer{text-align:center;padding:22px;color:#888;font-size:12px}
+h2{font-size:24px;font-weight:400;margin:0 0 8px;letter-spacing:0.5px}
+label{display:block;font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px;color:#666}
 
-/* Petal Canvases: Background and Foreground layers */
+input,textarea,select{width:100%;padding:14px 16px;border:1px solid #d5cebc;background:#fff;font:inherit;color:var(--ink);border-radius:2px;transition:border-color 0.2s, box-shadow 0.2s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(183,155,99,0.1)}
+
+button{border:0;background:var(--gold);color:white;padding:14px 22px;font:inherit;cursor:pointer;border-radius:2px;letter-spacing:1px;text-transform:uppercase;font-size:12px;font-weight:600;transition:background 0.2s}
+button:hover{background:var(--gold-dark)}
+button.secondary{background:#f0ece1;color:var(--ink)}
+button.secondary:hover{background:#e4dfd3}
+button:disabled{opacity:.55;cursor:not-allowed}
+
+.row{display:flex;gap:12px}.row>*{flex:1}
+.muted{color:#777;font-size:13px;line-height:1.5}
+.guest{padding:18px 0;border-bottom:1px solid var(--line)}.guest:last-child{border-bottom:0}
+.guest-name{font-size:18px;margin-bottom:10px;font-weight:normal}
+.choices{display:flex;gap:10px}
+.choices button{flex:1;background:#f0ece1;color:var(--ink);transition:all 0.2s;font-size:11px}
+.choices button.active{background:var(--gold);color:#fff}
+.summary{background:#f8f6f0;border:1px solid var(--line);padding:16px 20px;margin-top:20px;font-size:14px;border-radius:2px}
+.error{color:#9b4d42;font-size:13px;margin-top:8px}
+.small{font-size:11px;text-transform:none;letter-spacing:0}
+.footer{text-align:center;padding:24px;color:#888;font-size:12px;letter-spacing:1px}
+
 #petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 #petalCanvasFront { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
-@media(max-width:500px){h1{font-size:56px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
+@media(max-width:500px){h1{font-size:58px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -46,7 +67,7 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
 <div class="wrap"><div class="card">
 <header class="hero">
   <div class="kicker">The Wedding of</div>
-  <h1>Fox & Anj</h1>
+  <h1>Fox &amp; Anj</h1>
   <div class="date">December 8, 2026 · Santa Maria, Bulacan</div>
 </header>
 
@@ -78,7 +99,7 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
       <label>Message for the couple <span class="small">(optional)</span></label>
       <textarea id="message" rows="3" placeholder="Leave us a little message"></textarea>
     </div>
-    <div style="margin-top:22px"><button id="submitBtn" disabled>Submit RSVP</button></div>
+    <div style="margin-top:24px"><button id="submitBtn" disabled>Submit RSVP</button></div>
     <div id="submitError" class="error"></div>
   </section>
 
@@ -90,7 +111,7 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
   </section>
 </div>
 
-<div class="footer">With love, Fox & Anj</div>
+<div class="footer">With love, Fox &amp; Anj</div>
 </div></div>
 
 <script>
