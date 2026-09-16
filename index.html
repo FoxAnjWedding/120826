@@ -66,7 +66,14 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 .modal-box{background:var(--paper);border:1px solid var(--line);box-shadow:0 15px 40px rgba(0,0,0,0.1);border-radius:3px;width:90%;max-width:440px;padding:32px 28px;transform:translateY(12px) scale(0.97);transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);text-align:center}
 .modal-overlay.active .modal-box{transform:translateY(0) scale(1)}
 .modal-box h3{font-family:'Pinyon Script', cursive;font-size:42px;color:var(--gold);margin:0 0 12px;font-weight:400}
-.modal-box p{font-size:14px;color:var(--ink);line-height:1.6;margin:0 0 24px}
+.modal-box p{font-size:14px;color:var(--ink);line-height:1.6;margin:0 0 16px}
+
+/* Themed bullet list for pending guests */
+.modal-guest-list{list-style:none;padding:0;margin:0 0 24px;text-align:left;background:#f8f6f0;border:1px solid var(--line);border-radius:2px;padding:12px 16px;max-height:130px;overflow-y:auto}
+.modal-guest-list li{font-size:13px;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.modal-guest-list li:last-child{margin-bottom:0}
+.modal-guest-list li::before{content:"";width:5px;height:5px;background:var(--gold);border-radius:50%;display:inline-block;flex-shrink:0}
+
 .modal-actions{display:flex;gap:10px}
 .modal-actions button{flex:1}
 
@@ -86,7 +93,8 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 <div id="customModal" class="modal-overlay">
   <div class="modal-box">
     <h3>Pending Response</h3>
-    <p id="modalText"></p>
+    <p>The RSVP for the guest(s) below is still pending. We would love to get your final response before the deadline so we can finalize our guest list. Would you like to proceed with your submission for now?</p>
+    <ul id="modalGuestList" class="modal-guest-list"></ul>
     <div class="modal-actions">
       <button class="secondary" id="modalCancelBtn">Review/Edit</button>
       <button id="modalConfirmBtn">Proceed Anyway</button>
@@ -327,15 +335,16 @@ function updateSummary(){
   document.getElementById("seatSummary").textContent=`${yes} seat${yes!==1?"s":""} confirmed`;
 }
 
-// Custom Modal Controls & Submission Flow
-function showConfirmModal(namesList) {
+// Custom Modal Controls with Themed Bullet List
+function showConfirmModal(pendingGuests) {
   return new Promise((resolve) => {
     const modal = document.getElementById("customModal");
-    const modalText = document.getElementById("modalText");
+    const modalGuestList = document.getElementById("modalGuestList");
     const confirmBtn = document.getElementById("modalConfirmBtn");
     const cancelBtn = document.getElementById("modalCancelBtn");
 
-    modalText.textContent = `The RSVP for ${namesList} is still pending. We would love to get your final response before the deadline so we can finalize our guest list. Would you like to proceed with your submission for now?`;
+    // Populate themed bullet list items
+    modalGuestList.innerHTML = pendingGuests.map(g => `<li>${esc(g.name)}</li>`).join("");
     
     modal.classList.add("active");
 
@@ -359,8 +368,7 @@ document.getElementById("submitBtn").onclick = async () => {
 
   const pendingGuests = household.guests.filter(g => !answers[g.id]);
   if (pendingGuests.length > 0) {
-    const namesList = pendingGuests.map(g => g.name).join(", ");
-    const proceed = await showConfirmModal(namesList);
+    const proceed = await showConfirmModal(pendingGuests);
     if (!proceed) return;
   }
 
