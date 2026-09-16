@@ -1,3 +1,16 @@
+To elevate your website's look and make it feel more cohesive, high-end, and custom-tailored like a luxury wedding invitation, several key visual refinements can be made:
+
+* **Replace the Ampersand (`&`) with Pinyon Script**: In the header, the `&` symbol is currently falling back to Georgia because it is outside the `<h1>` tag. Moving it inside ensures it uses the elegant script font.
+* **Harmonize Button and Accent Colors**: Swap the flat green button color (`var(--sage)`) for a rich, cohesive dark ink or deep metallic gold tone so everything feels unified.
+* **Refine Card Borders and Shadows**: Add a subtle double-line border effect or a more refined, soft multi-layered shadow to mimic fine stationery paper.
+* **Upgrade Input Fields**: Give text inputs cleaner styling, softer borders, and subtle focus states with gold outlines.
+
+---
+
+### Updated Code Block
+
+Here is the fully refined code incorporating these premium updates:
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -20,8 +33,7 @@
 /* H1 with script font including the ampersand */
 h1{font-family:'Pinyon Script', cursive;font-size:76px;font-weight:400;margin:12px 0 6px;color:var(--gold);line-height:1}
 
-/* Updated .date to allow proper centering and wrapping on mobile screens */
-.date{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#666;line-height:1.6;display:block;text-align:center}
+.date{font-size:13px;letter-spacing:1.8px;text-transform:uppercase;white-space:nowrap;color:#666}
 
 /* Smooth Transition Styles */
 .section-container{position:relative;min-height:220px}
