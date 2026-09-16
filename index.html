@@ -4,12 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Reggie & Angelika — RSVP</title>
+<!-- Added Cursive Font -->
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 <style>
 :root{--cream:#f8f4ec;--paper:#fffdf8;--ink:#3f4037;--sage:#7d8a70;--gold:#b79b63;--line:#ded8ca}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow-x:hidden}
 .wrap{max-width:680px;margin:auto;padding:28px 18px 60px;position:relative;z-index:2}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 40px #0000000c;overflow:hidden;position:relative}
 .hero{text-align:center;padding:52px 24px 34px;background:linear-gradient(#fffdf8ee,#fffdf8ee),url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80") center/cover}
-.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}h1{font-size:42px;font-weight:400;margin:15px 0 8px}h2{font-size:25px;font-weight:400;margin:0 0 10px}
+.kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold)}
+
+/* Updated H1 to use Great Vibes font and match gold color */
+h1{font-family:'Great Vibes', cursive;font-size:64px;font-weight:400;margin:10px 0 8px;color:var(--gold)}
+
+h2{font-size:25px;font-weight:400;margin:0 0 10px}
 
 /* Updated .date with white-space: nowrap and adjusted font-size for mobile screens */
 .date{font-size:14px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
@@ -27,7 +34,7 @@ label{display:block;font-size:13px;margin:0 0 8px}input,textarea,select{width:10
 #petalCanvasBack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 #petalCanvasFront { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
-@media(max-width:500px){h1{font-size:34px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
+@media(max-width:500px){h1{font-size:52px}.page-section{padding:26px 20px}.row{flex-direction:column}.choices{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -91,38 +98,20 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwQ7CgFwziyn98OEKU8AAtt
 let household = null;
 let answers = {};
 
-// Gyroscope handling without manual permission popup dialogs where possible
 let gyroX = 0;
-
-function handleOrientation(e) {
-  if (e.gamma !== null) {
-    gyroX = e.gamma / 15;
-  }
-}
-
+function handleOrientation(e) { if (e.gamma !== null) { gyroX = e.gamma / 15; } }
 function initGyroSilently() {
-  // iOS 13+ devices require explicit permission via requestPermission, but it MUST be triggered 
-  // directly inside a user interaction handler (like click/touch). By attaching this silently 
-  // on the very first page click/touch, it requests permission seamlessly without a custom button.
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     DeviceOrientationEvent.requestPermission().then(response => {
-      if (response === 'granted') {
-        window.addEventListener('deviceorientation', handleOrientation);
-      }
+      if (response === 'granted') { window.addEventListener('deviceorientation', handleOrientation); }
     }).catch(() => {});
-  } else {
-    window.addEventListener('deviceorientation', handleOrientation);
-  }
+  } else { window.addEventListener('deviceorientation', handleOrientation); }
 }
-
 window.addEventListener('click', initGyroSilently, { once: true });
 window.addEventListener('touchstart', initGyroSilently, { once: true });
 
-
-// Falling organic yellow petals (scaled down slightly smaller, falling slightly faster)
 const canvasBack = document.getElementById('petalCanvasBack');
 const ctxBack = canvasBack.getContext('2d');
-
 const canvasFront = document.getElementById('petalCanvasFront');
 const ctxFront = canvasFront.getContext('2d');
 
@@ -143,7 +132,7 @@ function createPetals(count, isFront = false) {
     arr.push({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight - window.innerHeight,
-      scale: (Math.random() * 0.4 + (isFront ? 0.7 : 0.45)), // Scaled smaller per request
+      scale: (Math.random() * 0.4 + (isFront ? 0.7 : 0.45)),
       d: Math.random() * count,
       color: palette[Math.floor(Math.random() * palette.length)],
       tilt: Math.random() * Math.PI * 2,
@@ -162,12 +151,7 @@ function drawCurvedPetal(ctx, p) {
   ctx.translate(p.x, p.y);
   ctx.rotate(p.tilt);
   ctx.scale(p.scale, p.scale);
-
-  if (p.blur > 0.5) {
-    ctx.shadowBlur = p.blur;
-    ctx.shadowColor = p.color;
-  }
-
+  if (p.blur > 0.5) { ctx.shadowBlur = p.blur; ctx.shadowColor = p.color; }
   ctx.fillStyle = p.color;
   ctx.beginPath();
   ctx.moveTo(-16, 0);
@@ -175,7 +159,6 @@ function drawCurvedPetal(ctx, p) {
   ctx.bezierCurveTo(8, 2, -2, 6, -16, 0);
   ctx.closePath();
   ctx.fill();
-
   ctx.restore();
 }
 
@@ -187,17 +170,11 @@ function updateAndDrawPetals(ctx, petals) {
 let angle = 0;
 function animatePetals() {
   angle += 0.007;
-
-  // Faster falling speed and gyro drift integration
   backPetals.forEach((p) => {
     p.tilt += p.tiltSpeed;
     p.y += (Math.cos(angle + p.d) + 1.5) * 0.35; 
     p.x += (Math.sin(angle) * 0.35) + gyroX;
-
-    if (p.y > window.innerHeight + 30) {
-      p.x = Math.random() * window.innerWidth;
-      p.y = -30;
-    }
+    if (p.y > window.innerHeight + 30) { p.x = Math.random() * window.innerWidth; p.y = -30; }
     if (p.x > window.innerWidth + 30) p.x = -30;
     if (p.x < -30) p.x = window.innerWidth + 30;
   });
@@ -206,23 +183,17 @@ function animatePetals() {
     p.tilt += p.tiltSpeed;
     p.y += (Math.cos(angle + p.d) + 1.7) * 0.45; 
     p.x += (Math.sin(angle * 1.1) * 0.55) + (gyroX * 1.25);
-
-    if (p.y > window.innerHeight + 30) {
-      p.x = Math.random() * window.innerWidth;
-      p.y = -30;
-    }
+    if (p.y > window.innerHeight + 30) { p.x = Math.random() * window.innerWidth; p.y = -30; }
     if (p.x > window.innerWidth + 30) p.x = -30;
     if (p.x < -30) p.x = window.innerWidth + 30;
   });
 
   updateAndDrawPetals(ctxBack, backPetals);
   updateAndDrawPetals(ctxFront, frontPetals);
-
   requestAnimationFrame(animatePetals);
 }
 animatePetals();
 
-// Auto-play background music on load with browser policy fallback
 window.addEventListener('DOMContentLoaded', () => {
   const audio = document.getElementById('bgAudio');
   audio.play().catch(() => {
@@ -248,11 +219,8 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function switchSection(hideId, showId) {
   const hideElem = document.getElementById(hideId);
   const showElem = document.getElementById(showId);
-  
   hideElem.classList.remove("active");
-  setTimeout(() => {
-    showElem.classList.add("active");
-  }, 200);
+  setTimeout(() => { showElem.classList.add("active"); }, 200);
 }
 
 document.getElementById("searchBtn").onclick = async () => {
@@ -266,14 +234,11 @@ document.getElementById("searchBtn").onclick = async () => {
     household=res.household; answers={};
     household.guests.forEach(g=>answers[g.id]=g.status||"");
     renderGuests();
-    
     let cleanMobile = household.mobile || "";
     if (cleanMobile.startsWith("'")) cleanMobile = cleanMobile.substring(1);
     document.getElementById("mobile").value=cleanMobile;
-    
     document.getElementById("dietary").value=household.dietary||"";
     document.getElementById("message").value=household.message||"";
-    
     switchSection("searchSection", "rsvpSection");
   }catch(e){err.textContent="Unable to connect. Please try again."}
   finally{btn.disabled=false;btn.textContent="Find My Invitation"}
@@ -300,12 +265,8 @@ function updateSummary(){
 document.getElementById("submitBtn").onclick=async()=>{
   const err=document.getElementById("submitError");err.textContent="";
   const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
-  
   let rawMobile = document.getElementById("mobile").value.trim();
-  if (rawMobile.startsWith("0")) {
-    rawMobile = "'" + rawMobile;
-  }
-
+  if (rawMobile.startsWith("0")) { rawMobile = "'" + rawMobile; }
   try{
     const res=await api("submitRSVP",{
       householdId:household.id,answers,
@@ -316,7 +277,6 @@ document.getElementById("submitBtn").onclick=async()=>{
     if(!res.ok){err.textContent=res.message||"Unable to save your RSVP.";return}
     const yes=Object.values(answers).filter(x=>x==="Attending").length;
     document.getElementById("successText").textContent=`Thank you for confirming. We have ${yes} guest${yes!==1?"s":""} attending from your invitation.`;
-    
     switchSection("rsvpSection", "successSection");
   }catch(e){err.textContent="Unable to save your RSVP. Please try again."}
   finally{btn.disabled=false;btn.textContent="Submit RSVP"}
