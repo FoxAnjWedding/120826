@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -19,7 +20,8 @@
 /* H1 with script font including the ampersand */
 h1{font-family:'Pinyon Script', cursive;font-size:76px;font-weight:400;margin:12px 0 6px;color:var(--gold);line-height:1}
 
-.date{font-size:13px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;color:#666}
+/* Updated .date to allow proper centering and wrapping on mobile screens */
+.date{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#666;line-height:1.6;display:block;text-align:center}
 
 /* Smooth Transition Styles */
 .section-container{position:relative;min-height:220px}
@@ -304,3 +306,5 @@ document.getElementById("submitBtn").onclick=async()=>{
 };
 </script>
 </body></html>
+
+```
