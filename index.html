@@ -145,7 +145,7 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
     <div class="mark">✓</div><h2>You're all set!</h2>
     <p id="successText"></p>
     <p class="muted">You may return to this page before the RSVP deadline if you need to update your response.</p>
-    <button class="secondary" onclick="location.reload()">Back</button>
+    <button class="secondary" onclick="goBackToPortal(event)">Back</button>
   </section>
 </div>
 
@@ -156,6 +156,36 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 const API_URL = "https://script.google.com/macros/s/AKfycbzXQOedCekb4MAmfbGDkEfAqGyoMG-3Htl9t2TDQBXoD1WXPVQdQq-M2niKsifPMG9c/exec";
 let household = null;
 let answers = {};
+
+function goBackToPortal(event) {
+  event.preventDefault();
+  
+  if (window.history.length <= 1) {
+    window.close();
+    setTimeout(() => {
+      window.location.href = "https://aya-bloom.my.canva.site/fox-anj/page-2";
+    }, 150);
+  } else {
+    sessionStorage.setItem('scrollToBottom', 'true');
+    window.history.back();
+  }
+}
+
+window.addEventListener('pageshow', function() {
+  if (sessionStorage.getItem('scrollToBottom') === 'true') {
+    sessionStorage.removeItem('scrollToBottom');
+    
+    let attempts = 0;
+    const checkHeightAndScroll = setInterval(() => {
+      attempts++;
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      
+      if (attempts > 10) {
+        clearInterval(checkHeightAndScroll);
+      }
+    }, 100);
+  }
+});
 
 let gyroX = 0;
 function handleOrientation(e) { if (e.gamma !== null) { gyroX = e.gamma / 15; } }
@@ -343,9 +373,7 @@ function showConfirmModal(pendingGuests) {
     const confirmBtn = document.getElementById("modalConfirmBtn");
     const cancelBtn = document.getElementById("modalCancelBtn");
 
-    // Populate themed bullet list items
     modalGuestList.innerHTML = pendingGuests.map(g => `<li>${esc(g.name)}</li>`).join("");
-    
     modal.classList.add("active");
 
     const cleanup = (result) => {
