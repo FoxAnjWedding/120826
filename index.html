@@ -160,7 +160,7 @@ let answers = {};
 function goBackToPortal(event) {
   event.preventDefault();
   
-  if (window.history.length <= 1) {
+  if (window.history.length <= 2) {
     window.close();
     setTimeout(() => {
       window.location.href = "https://aya-bloom.my.canva.site/fox-anj/page-2";
