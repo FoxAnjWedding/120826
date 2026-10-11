@@ -28,9 +28,9 @@ button.secondary{background:#eee9de;color:var(--ink);width:auto}
 button:disabled{opacity:.55;cursor:not-allowed}
 .error{color:var(--error);font-size:13px;margin-top:8px}
 
-/* Dashboard UI & Smooth Transition */
-#app{opacity:0;max-height:0;overflow:hidden;transition:opacity 0.5s ease, max-height 0.5s ease;pointer-events:none}
-#app.visible{opacity:1;max-height:8000px;pointer-events:auto}
+/* Dashboard UI & Smooth Transition - No Max Height Limit */
+#app{opacity:0;height:0;overflow:hidden;transition:opacity 0.5s ease;pointer-events:none}
+#app.visible{opacity:1;height:auto;overflow:visible;pointer-events:auto}
 
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}
 .stat-card{background:#f4f0e6;padding:18px;text-align:center;border:1px solid var(--line)}
@@ -215,7 +215,7 @@ function formatTimestamp(raw) {
   
   let ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
-  hours = hours ? hours : 12; // the hour '0' should be '12'
+  hours = hours ? hours : 12;
   
   return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
 }
@@ -265,7 +265,6 @@ function filterAndRender() {
   const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
   const rowsEl = document.getElementById("rows");
 
-  // Trigger smooth fade out transition
   rowsEl.classList.add("fade-out");
 
   setTimeout(() => {
@@ -301,7 +300,6 @@ function filterAndRender() {
       }).join("");
     }
 
-    // Trigger smooth fade in transition
     rowsEl.classList.remove("fade-out");
   }, 200);
 }
