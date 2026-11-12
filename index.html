@@ -60,7 +60,7 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 .small{font-size:11px;text-transform:none;letter-spacing:0}
 .footer{text-align:center;padding:24px;color:#888;font-size:12px;letter-spacing:1px}
 
-/* Enhanced Countdown Timer Styling matching the reference layout */
+/* Enhanced Countdown Timer Styling */
 .countdown-container {
   display: flex;
   justify-content: center;
@@ -145,14 +145,14 @@ button.secondary .spinner{border:2px solid rgba(63,64,55,0.3);border-top-color:v
 <!-- Custom Soft Modal Dialog -->
 <div id="customModal" class="modal-overlay">
   <div class="modal-box">
-    <h3>Pending Response</h3>
-    <p>The RSVP for the guest(s) below is still pending. We would love to get your final response before the deadline so we can finalize our guest list.</p>
-    <ul id="modalGuestList" class="modal-guest-list"></ul>
+    <h3 id="modalTitle">Pending Response</h3>
+    <p id="modalText">The RSVP for the guest(s) below is still pending. We would love to get your final response before the deadline so we can finalize our guest list.</p>
+    <ul id="modalGuestList" class="modal-guest-list" style="display:none;"></ul>
     <div style="margin-bottom: 16px;">
       <span class="muted" style="font-size: 11px; display:block; text-transform:uppercase; letter-spacing:1px; margin-bottom: 4px;">Deadline Countdown:</span>
       <div id="modalCountdown" class="countdown-container"></div>
     </div>
-    <div class="modal-actions">
+    <div class="modal-actions" id="modalActions">
       <button class="secondary" id="modalCancelBtn">Review/Edit</button>
       <button id="modalConfirmBtn">Proceed Anyway</button>
     </div>
@@ -218,7 +218,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzXQOedCekb4MAmfbGDkEfA
 let household = null;
 let answers = {};
 
-// Deadline timer logic (Nov 08 2026 11:59 PM)
+// Deadline timer logic (Nov 13, 2026 11:59 PM)
 const deadlineDate = new Date("November 13, 2026 23:59:59").getTime();
 let previousTimeValues = {};
 
@@ -255,7 +255,6 @@ function renderCountdownInto(containerId, days, hours, minutes, seconds) {
     return;
   }
 
-  // Smooth downward roll animation when value changes
   ['days', 'hours', 'minutes', 'seconds'].forEach(key => {
     const span = document.getElementById(`${containerId}-${key === 'minutes' ? 'mins' : key === 'seconds' ? 'secs' : key}`);
     if (!span) return;
@@ -452,17 +451,58 @@ function switchSection(hideId, showId) {
   setTimeout(() => { showElem.classList.add("active"); }, 200);
 }
 
+// Helper to show deadline popup when searched after deadline
+function showDeadlinePassedModal() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("customModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalText = document.getElementById("modalText");
+    const modalGuestList = document.getElementById("modalGuestList");
+    const confirmBtn = document.getElementById("modalConfirmBtn");
+    const cancelBtn = document.getElementById("modalCancelBtn");
+    const modalActions = document.getElementById("modalActions");
+
+    modalTitle.textContent = "RSVP Closed";
+    modalText.textContent = "The RSVP deadline has already lapsed. Guests can no longer confirm their attendance. Thank you for the confirmation.";
+    modalGuestList.style.display = "none";
+    modalActions.style.display = "none"; // Hide alternative buttons, just let click outside or reload close it
+
+    modal.classList.add("active");
+    updateCountdowns();
+
+    const cleanup = () => {
+      modal.classList.remove("active");
+      modal.onclick = null;
+      // Reset defaults for other modals
+      modalTitle.textContent = "Pending Response";
+      modalGuestList.style.display = "block";
+      modalActions.style.display = "flex";
+      resolve();
+    };
+
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
+  });
+}
+
 document.getElementById("searchBtn").onclick = async () => {
-  const name=document.getElementById("nameInput").value.trim();
-  const err=document.getElementById("searchError"); err.textContent="";
-  if(!name){err.textContent="Please enter your name.";return}
+  const name = document.getElementById("nameInput").value.trim();
+  const err = document.getElementById("searchError"); 
+  err.textContent = "";
+  if (!name) { err.textContent = "Please enter your name."; return; }
+
+  // Check if deadline has lapsed before searching
+  const now = new Date().getTime();
+  if (now > deadlineDate) {
+    await showDeadlinePassedModal();
+    return;
+  }
   
-  const btn=document.getElementById("searchBtn"); 
-  btn.disabled=true; 
+  const btn = document.getElementById("searchBtn"); 
+  btn.disabled = true; 
   btn.innerHTML = '<span class="spinner"></span>Searching…';
 
-  try{
-    const res=await api("findGuest",{name});
+  try {
+    const res = await api("findGuest",{name});
     if(!res.ok){err.textContent=res.message||"We couldn't find that name.";return}
     household=res.household; answers={};
     household.guests.forEach(g=>answers[g.id]=g.status||"");
